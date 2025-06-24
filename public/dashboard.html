@@ -562,6 +562,48 @@
                 padding: 12px 8px;
             }
         }
+
+        .notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 12px 16px;
+    border-radius: 6px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+}
+
+.notification-success {
+    background-color: #10b981;
+}
+
+.notification-error {
+    background-color: #ef4444;
+}
+
+.notification-info {
+    background-color: #3b82f6;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    margin-left: auto;
+}
+
+.notification-close:hover {
+    opacity: 0.8;
+}
     </style>
 </head>
 <body>
@@ -1340,8 +1382,7 @@ async function loadEventsTable(filter = 'all') {
         tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ef4444;">Erro ao carregar eventos: ${error.message}</td></tr>`;
     }
 }
-        // Load Venues Table
-      // Load Venues Table
+// Load Venues Table
 async function loadVenuesTable(filter = {}) {
     const tbody = document.getElementById('venuesTable');
     
@@ -1410,15 +1451,6 @@ async function loadVenuesTable(filter = {}) {
     }
 }
 
-// Função auxiliar para formatar a localização do venue
-function formatVenueLocation(venue) {
-    const parts = [];
-    if (venue.city) parts.push(venue.city);
-    if (venue.state) parts.push(venue.state);
-    if (venue.country) parts.push(venue.country);
-    return parts.join(', ') || 'N/A';
-}
-
 // Função auxiliar para obter o label do tipo de venue (você pode ajustar conforme seus tipos)
 function getVenueTypeLabel(type) {
     const typeLabels = {
@@ -1432,6 +1464,15 @@ function getVenueTypeLabel(type) {
         'other': 'Outro'
     };
     return typeLabels[type] || type;
+}
+
+// Função auxiliar para formatar a localização do venue
+function formatVenueLocation(venue) {
+    const parts = [];
+    if (venue.city) parts.push(venue.city);
+    if (venue.state) parts.push(venue.state);
+    if (venue.country) parts.push(venue.country);
+    return parts.join(', ') || 'N/A';
 }
 
         // Load Bookings Table
@@ -1598,12 +1639,64 @@ function getVenueTypeLabel(type) {
             }
         }
 
-        function deleteVenue(id) {
-            if (confirm('Tem certeza que deseja excluir este local?')) {
-                venues = venues.filter(v => v.id !== id);
-                loadVenuesTable();
-            }
+
+        async function deleteVenue(id) {
+    // Confirmação com o usuário
+    if (!confirm('Tem certeza que deseja excluir este venue?\n\nEsta ação não pode ser desfeita e o venue será marcado como inativo.')) {
+        return;
+    }
+    
+    try {
+        // Mostrar loading no botão específico
+        const deleteButton = document.querySelector(`button[onclick="deleteVenue('${id}')"]`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Excluindo...';
         }
+        
+        // Fazer chamada para API
+        const response = await fetch(`/api/venues/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao excluir venue');
+        }
+        
+        // Sucesso
+        showNotification('Venue excluído com sucesso!', 'success');
+        
+        // Recarregar tabela de venues
+        await loadVenuesTable();
+        
+    } catch (error) {
+        console.error('Erro ao deletar venue:', error);
+        
+        // Tratar erros específicos da API
+        let errorMessage = error.message;
+        
+        if (error.message.includes('eventos futuros')) {
+            errorMessage = 'Não é possível excluir este venue pois há eventos futuros agendados.';
+        } else if (error.message.includes('não encontrado')) {
+            errorMessage = 'Venue não encontrado.';
+        } else if (error.message.includes('permissão')) {
+            errorMessage = 'Você não tem permissão para excluir este venue.';
+        }
+        
+        showNotification(errorMessage, 'error');
+        
+    } finally {
+        // Reabilitar botão
+        const deleteButton = document.querySelector(`button[onclick="deleteVenue('${id}')"]`);
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.textContent = 'Excluir';
+        }
+    }
+}
 
         function editUser(id) {
             const user = users.find(u => u.id === id);
@@ -1847,24 +1940,79 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
         submitBtn.textContent = originalText;
     }
 });
-        document.getElementById('venueForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const newVenue = {
-                id: venues.length + 1,
-                name: document.getElementById('venueName').value,
-                type: document.getElementById('venueType').value,
-                location: `${document.getElementById('venueCity').value}, ${document.getElementById('venueState').value}`,
-                capacity: parseInt(document.getElementById('venueCapacity').value),
-                events: 0,
-                status: 'active'
-            };
-            
-            venues.push(newVenue);
-            loadVenuesTable();
-            closeModal('venueModal');
-            this.reset();
+        document.getElementById('venueForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Desabilitar botão de submit para evitar duplo clique
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Salvando...';
+    
+    try {
+        // Coletar dados do formulário
+        const venueData = {
+            name: document.getElementById('venueName').value,
+            type: document.getElementById('venueType').value,
+            description: document.getElementById('venueDescription')?.value || '',
+            address: document.getElementById('venueAddress').value,
+            city: document.getElementById('venueCity').value,
+            state: document.getElementById('venueState').value,
+            country: document.getElementById('venueCountry')?.value || 'Brasil',
+            postal_code: document.getElementById('venuePostalCode')?.value || '',
+            capacity: parseInt(document.getElementById('venueCapacity').value),
+            latitude: parseFloat(document.getElementById('venueLatitude')?.value) || null,
+            longitude: parseFloat(document.getElementById('venueLongitude')?.value) || null,
+            amenities: getSelectedAmenities(), // Função auxiliar para pegar amenidades selecionadas
+            contact_info: getContactInfo(), // Função auxiliar para pegar informações de contato
+            manager_id: document.getElementById('venueManagerId')?.value || null,
+            metadata: {}
+        };
+        
+        // Validações básicas no frontend
+        if (!venueData.name || !venueData.type || !venueData.address || !venueData.capacity) {
+            throw new Error('Nome, tipo, endereço e capacidade são obrigatórios');
+        }
+        
+        if (venueData.capacity <= 0) {
+            throw new Error('Capacidade deve ser maior que zero');
+        }
+        
+        // Fazer chamada para API
+        const response = await fetch('/api/venues', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(venueData)
         });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao criar venue');
+        }
+        
+        // Sucesso
+        showNotification('Venue criado com sucesso!', 'success');
+        
+        // Recarregar tabela de venues
+        await loadVenuesTable();
+        
+        // Fechar modal e resetar formulário
+        closeModal('venueModal');
+        this.reset();
+        
+    } catch (error) {
+        console.error('Erro ao salvar venue:', error);
+        showNotification(error.message, 'error');
+    } finally {
+        // Reabilitar botão
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    }
+});
 
         document.getElementById('userForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -1930,6 +2078,53 @@ function checkAuth() {
     }
     
     return true;
+}
+
+// Função auxiliar para obter amenidades selecionadas
+function getSelectedAmenities() {
+    const amenities = [];
+    const checkboxes = document.querySelectorAll('input[name="amenities"]:checked');
+    checkboxes.forEach(checkbox => {
+        amenities.push(checkbox.value);
+    });
+    return amenities;
+}
+
+// Função auxiliar para obter informações de contato
+function getContactInfo() {
+    const contactInfo = {};
+    
+    const phone = document.getElementById('venuePhone')?.value;
+    const email = document.getElementById('venueEmail')?.value;
+    const website = document.getElementById('venueWebsite')?.value;
+    
+    if (phone) contactInfo.phone = phone;
+    if (email) contactInfo.email = email;
+    if (website) contactInfo.website = website;
+    
+    return contactInfo;
+}
+
+// Função para mostrar notificações
+function showNotification(message, type = 'info') {
+    // Criar elemento de notificação
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <span>${message}</span>
+        <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    // Adicionar ao DOM
+    const container = document.getElementById('notificationContainer') || document.body;
+    container.appendChild(notification);
+    
+    // Remover automaticamente após 5 segundos
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
 }
 
 // Executar verificação ao carregar a página
