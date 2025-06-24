@@ -1553,7 +1553,20 @@ function formatVenueLocation(venue) {
         }
 
         function closeModal(modalId) {
+            if(modalId == 'venueModal'){
+                document.querySelector('#venueModal .modal-title').textContent = 'Novo Local';
+                setTimeout(() => {
+                    document.querySelector('#venueForm button[type="submit"]').textContent = 'Salvar';
+                }, 300);
+            }
+            if(modalId == 'eventModal') {
+                 document.querySelector('#eventModal .modal-title').textContent = 'Novo Evento';
+                setTimeout(() => {
+                    document.querySelector('#eventForm button[type="submit"]').textContent = 'Salvar Evento';
+                }, 300);
+            }
             document.getElementById(modalId).classList.remove('active');
+            
         }
 
         async function populateVenueSelect() {
@@ -1629,15 +1642,69 @@ function formatVenueLocation(venue) {
             }
         }
 
-        function editVenue(id) {
-            const venue = venues.find(v => v.id === id);
-            if (venue) {
-                document.getElementById('venueName').value = venue.name;
-                document.getElementById('venueType').value = venue.type;
-                document.getElementById('venueCapacity').value = venue.capacity;
-                openVenueModal();
+        async function editVenue(id) {
+        console.log(`Editando venue com ID: ${id}`);
+        try {
+            // Fazer chamada para API para buscar dados do venue
+            const response = await fetch(`/api/venues/${id}`, {
+                credentials: 'include' 
+            });
+
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.message || 'Erro ao carregar venue');
             }
-        }
+            
+            const venue = data.venue;
+            
+            // Preencher o formulário com os dados do venue
+            document.getElementById('venueName').value = venue.name || '';
+            document.getElementById('venueType').value = venue.type || '';
+            document.getElementById('venueDescription').value = venue.description || '';
+            document.getElementById('venueAddress').value = venue.address || '';
+            document.getElementById('venueCity').value = venue.city || '';
+            document.getElementById('venueState').value = venue.state || '';
+            // document.getElementById('venueCountry').value = venue.country || '';
+            // document.getElementById('venuePostalCode').value = venue.postal_code || '';
+            // document.getElementById('venueLatitude').value = venue.latitude || '';
+            // document.getElementById('venueLongitude').value = venue.longitude || '';
+            document.getElementById('venueCapacity').value = venue.capacity || '';
+            // document.getElementById('venueManagerId').value = venue.manager_id || '';
+            
+            // Preencher amenities se existir campo
+            if (document.getElementById('venueAmenities') && venue.amenities) {
+                document.getElementById('venueAmenities').value = Array.isArray(venue.amenities) 
+                    ? venue.amenities.join(', ') 
+                    : venue.amenities;
+            }
+            
+            // Preencher contact_info se existir campos
+            if (venue.contact_info) {
+                if (document.getElementById('venuePhone')) {
+                    document.getElementById('venuePhone').value = venue.contact_info.phone || '';
+                }
+                if (document.getElementById('venueEmail')) {
+                    document.getElementById('venueEmail').value = venue.contact_info.email || '';
+                }
+                if (document.getElementById('venueWebsite')) {
+                    document.getElementById('venueWebsite').value = venue.contact_info.website || '';
+                }
+            }
+            
+            // Marcar que estamos editando (não criando)
+            document.getElementById('venueForm').dataset.editId = id;
+            document.querySelector('#venueModal .modal-title').textContent = 'Editar Venue';
+            document.querySelector('#venueForm button[type="submit"]').textContent = 'Atualizar Venue';
+            
+            // Abrir modal
+            openVenueModal();
+        
+    } catch (error) {
+        console.error('Erro ao carregar venue:', error);
+        alert('Erro ao carregar dados do venue: ' + error.message);
+    }
+}
 
 
         async function deleteVenue(id) {
@@ -1922,7 +1989,7 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
         const data = await response.json();
         
         if (response.ok) {
-            alert(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!');
+            showNotification(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!', 'success')
             closeModal('eventModal');
             this.reset();
             delete this.dataset.editId;
@@ -1933,14 +2000,16 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
         
     } catch (error) {
         console.error('Erro ao salvar evento:', error);
-        alert('Erro ao salvar evento: ' + error.message);
+        showNotification('Erro ao salvar evento: ' + error.message, 'error')
     } finally {
         // Restaurar botão
         submitBtn.disabled = false;
         submitBtn.textContent = originalText;
     }
 });
-        document.getElementById('venueForm').addEventListener('submit', async function(e) {
+       
+
+document.getElementById('venueForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     // Desabilitar botão de submit para evitar duplo clique
@@ -1948,8 +2017,13 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
     const originalText = submitButton.textContent;
     submitButton.disabled = true;
     submitButton.textContent = 'Salvando...';
-    
+   
+   
     try {
+        // Verificar se é edição ou criação
+        const editId = this.dataset.editId;
+        const isEditing = !!editId;
+        
         // Coletar dados do formulário
         const venueData = {
             name: document.getElementById('venueName').value,
@@ -1978,9 +2052,13 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
             throw new Error('Capacidade deve ser maior que zero');
         }
         
+        // Definir URL e método baseado na operação
+        const url = isEditing ? `/api/venues/${editId}` : '/api/venues';
+        const method = isEditing ? 'PUT' : 'POST';
+        
         // Fazer chamada para API
-        const response = await fetch('/api/venues', {
-            method: 'POST',
+        const response = await fetch(url, {
+            method: method,
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -1991,29 +2069,33 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.message || 'Erro ao criar venue');
+            throw new Error(data.message || `Erro ao ${isEditing ? 'atualizar' : 'criar'} venue`);
         }
         
-        // Sucesso
-        showNotification('Venue criado com sucesso!', 'success');
+        // Sucesso - mostrar mensagem e fechar modal
+        showNotification(data.message || `Venue ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success')
+        // Limpar o dataset de edição
+        delete this.dataset.editId;
         
-        // Recarregar tabela de venues
-        await loadVenuesTable();
-        
-        // Fechar modal e resetar formulário
-        closeModal('venueModal');
+        // Resetar formulário
         this.reset();
+        
+        // Fechar modal
+        closeModal('venueModal');
+        
+         
+        // Recarregar lista de venues
+        loadVenuesTable();
         
     } catch (error) {
         console.error('Erro ao salvar venue:', error);
-        showNotification(error.message, 'error');
+        alert('Erro ao salvar venue: ' + error.message);
     } finally {
-        // Reabilitar botão
+        // Restaurar botão
         submitButton.disabled = false;
         submitButton.textContent = originalText;
     }
 });
-
         document.getElementById('userForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
