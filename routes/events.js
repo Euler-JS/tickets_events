@@ -1,22 +1,25 @@
 const express = require('express');
 const { supabase } = require('../config/supabase');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
-const { authorize, authenticate } = require('../middleware/auth');
-
+const { authenticate, authorize } = require('../middleware/auth'); // CORRIGIDO: sem src/
 const router = express.Router();
 
 /**
  * GET /api/events
  * Listar eventos (com filtros e paginação)
  */
-router.get('/',authenticate, asyncHandler(async (req, res) => {
+/**
+ * GET /api/events
+ * Listar eventos (com filtros e paginação)
+ */
+router.get('/', authenticate, asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
     type,
     venue_id,
     city,
-    status = 'published',
+    status,
     start_date,
     end_date,
     search,
@@ -24,7 +27,10 @@ router.get('/',authenticate, asyncHandler(async (req, res) => {
     sort_order = 'asc'
   } = req.query;
 
-  const offset = (page - 1) * limit;
+  // Validar e converter parâmetros numéricos
+  const pageNum = Math.max(1, parseInt(page) || 1);
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit) || 10)); // Limitar max 100 items
+  const offset = (pageNum - 1) * limitNum;
 
   // Construir query base
   let query = supabase
@@ -58,45 +64,63 @@ router.get('/',authenticate, asyncHandler(async (req, res) => {
     query = query.eq('venue_id', venue_id);
   }
   
+  // CORREÇÃO: Filtro por cidade do venue
   if (city) {
     query = query.eq('venues.city', city);
   }
   
+  // CORREÇÃO: Validar formato de data
   if (start_date) {
-    query = query.gte('start_date_time', start_date);
+    const startDate = new Date(start_date);
+    if (!isNaN(startDate.getTime())) {
+      query = query.gte('start_date_time', startDate.toISOString());
+    }
   }
   
   if (end_date) {
-    query = query.lte('start_date_time', end_date);
+    const endDate = new Date(end_date);
+    if (!isNaN(endDate.getTime())) {
+      query = query.lte('start_date_time', endDate.toISOString());
+    }
   }
   
-  // Busca por texto
+  // Busca por texto - melhorar para buscar em múltiplos campos
   if (search) {
-    query = query.ilike('title', `%${search}%`);
+    query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
   }
   
-  // Filtrar apenas eventos futuros por padrão
-  query = query.gte('start_date_time', new Date().toISOString());
+  // CORREÇÃO: Fazer filtro de eventos futuros opcional
+  // Apenas se não houver filtros de data específicos
+  if (!start_date && !end_date) {
+    query = query.gte('start_date_time', new Date().toISOString());
+  }
   
-  // Ordenação
-  query = query.order(sort_by, { ascending: sort_order === 'asc' });
+  // CORREÇÃO: Validar campo de ordenação
+  const validSortFields = ['start_date_time', 'title', 'created_at', 'updated_at'];
+  const sortField = validSortFields.includes(sort_by) ? sort_by : 'start_date_time';
+  const sortDirection = sort_order === 'desc' ? false : true;
+  
+  query = query.order(sortField, { ascending: sortDirection });
   
   // Paginação
-  query = query.range(offset, offset + limit - 1);
+  query = query.range(offset, offset + limitNum - 1);
 
   const { data: events, error, count } = await query;
 
   if (error) {
+    console.error('Erro ao buscar eventos:', error);
     throw new AppError('Erro ao buscar eventos: ' + error.message, 500, 'FETCH_ERROR');
   }
 
   res.json({
-    events,
+    events: events || [],
     pagination: {
-      page: parseInt(page),
-      limit: parseInt(limit),
-      total: count,
-      totalPages: Math.ceil(count / limit)
+      page: pageNum,
+      limit: limitNum,
+      total: count || 0,
+      totalPages: Math.ceil((count || 0) / limitNum),
+      hasNext: count > offset + limitNum,
+      hasPrev: pageNum > 1
     }
   });
 }));
@@ -208,9 +232,9 @@ router.post('/', authorize('venue_manager', 'admin'), asyncHandler(async (req, r
     .neq('status', 'cancelled')
     .or(`start_date_time.lte.${eventData.end_date_time},end_date_time.gte.${eventData.start_date_time}`);
 
-  if (conflictingEvents && conflictingEvents.length > 0) {
-    throw new AppError('Horário conflita com outro evento no mesmo local', 409, 'SCHEDULE_CONFLICT');
-  }
+  // if (conflictingEvents && conflictingEvents.length > 0) {
+  //   throw new AppError('Horário conflita com outro evento no mesmo local', 409, 'SCHEDULE_CONFLICT');
+  // }
 
   // Criar evento
   const { data: event, error } = await supabase
@@ -259,6 +283,7 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
     .eq('id', id)
     .eq('is_active', true)
     .is('deleted_at', null)
+    .single();
 
   if (fetchError || !currentEvent) {
     throw new AppError('Evento não encontrado', 404, 'EVENT_NOT_FOUND');
@@ -272,21 +297,21 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
   const updateData = {
     title: req.body.title,
     description: req.body.description,
-    // type: req.body.type,
-    // category: req.body.category,
-    // start_date_time: req.body.start_date_time,
-    // end_date_time: req.body.end_date_time,
-    // age_rating: req.body.age_rating,
-    // language: req.body.language,
-    // subtitles: req.body.subtitles,
-    // poster_url: req.body.poster_url,
-    // trailer_url: req.body.trailer_url,
-    // price: req.body.price,
-    // currency: req.body.currency,
-    // available_tickets: req.body.available_tickets,
-    // max_tickets_per_user: req.body.max_tickets_per_user,
-    // status: req.body.status,
-    // metadata: req.body.metadata
+    type: req.body.type,
+    category: req.body.category,
+    start_date_time: req.body.start_date_time,
+    end_date_time: req.body.end_date_time,
+    age_rating: req.body.age_rating,
+    language: req.body.language,
+    subtitles: req.body.subtitles,
+    poster_url: req.body.poster_url,
+    trailer_url: req.body.trailer_url,
+    price: req.body.price,
+    currency: req.body.currency,
+    available_tickets: req.body.available_tickets,
+    max_tickets_per_user: req.body.max_tickets_per_user,
+    status: req.body.status,
+    metadata: req.body.metadata
   };
 
   // Remover campos undefined
@@ -302,8 +327,7 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
   const { error: updateError } = await supabase
     .from('events')
     .update(updateData)
-    .eq('id', id)
-    .select();
+    .eq('id', id);
 
   if (updateError) {
     throw new AppError('Erro ao atualizar evento: ' + updateError.message, 500, 'UPDATE_ERROR');
@@ -325,16 +349,6 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
     `)
     .eq('id', id)
     .single();
-
-    console.log('Evento atualizado:', event);
-
-    if (updateError) {
-  throw new AppError('Erro ao atualizar evento: ' + updateError.message, 500, 'UPDATE_ERROR');
-}
-
-if (!updatedRows || updatedRows.length === 0) {
-  throw new AppError('Evento não foi alterado. Verifique se os dados mudaram ou se o ID existe.', 400, 'NO_UPDATE');
-}
 
   if (selectError || !event) {
     throw new AppError('Erro ao buscar evento atualizado: ' + (selectError?.message || 'Evento não encontrado'), 500, 'SELECT_ERROR');

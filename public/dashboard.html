@@ -1153,35 +1153,7 @@
         //     }
         // ];
 
-        let venues = [
-            {
-                id: 1,
-                name: "Arena Corinthians",
-                type: "stadium",
-                location: "São Paulo, SP",
-                capacity: 47000,
-                events: 12,
-                status: "active"
-            },
-            {
-                id: 2,
-                name: "Teatro Municipal",
-                type: "theater",
-                location: "São Paulo, SP",
-                capacity: 500,
-                events: 8,
-                status: "active"
-            },
-            {
-                id: 3,
-                name: "Cinema Central",
-                type: "cinema",
-                location: "São Paulo, SP",
-                capacity: 220,
-                events: 45,
-                status: "active"
-            }
-        ];
+        let venues = [];
 
         let bookings = [
             {
@@ -1369,25 +1341,98 @@ async function loadEventsTable(filter = 'all') {
     }
 }
         // Load Venues Table
-        function loadVenuesTable() {
-            const tbody = document.getElementById('venuesTable');
-            tbody.innerHTML = venues.map(venue => `
-                <tr>
-                    <td>${venue.name}</td>
-                    <td>${getVenueTypeLabel(venue.type)}</td>
-                    <td>${venue.location}</td>
-                    <td>${venue.capacity.toLocaleString()}</td>
-                    <td>${venue.events}</td>
-                    <td><span class="status-badge status-${venue.status === 'active' ? 'published' : 'cancelled'}">${venue.status === 'active' ? 'Ativo' : 'Inativo'}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm btn-secondary" onclick="editVenue(${venue.id})">Editar</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteVenue(${venue.id})">Excluir</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+      // Load Venues Table
+async function loadVenuesTable(filter = {}) {
+    const tbody = document.getElementById('venuesTable');
+    
+    try {
+        // Mostrar loading
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando venues...</td></tr>';
+        
+        // Construir URL com filtros
+        let url = '/api/venues';
+        const params = new URLSearchParams();
+        
+        // Adicionar filtros se fornecidos
+        if (filter.type) params.append('type', filter.type);
+        if (filter.city) params.append('city', filter.city);
+        if (filter.state) params.append('state', filter.state);
+        if (filter.country) params.append('country', filter.country);
+        if (filter.search) params.append('search', filter.search);
+        
+        // Adicionar parâmetros de ordenação e paginação
+        params.append('sort_by', 'name');
+        params.append('sort_order', 'asc');
+        params.append('limit', '50'); // Ajuste conforme necessário
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
         }
+        
+        // Fazer chamada para API
+        const response = await fetch(url, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar venues');
+        }
+        
+        const venues = data.venues || [];
+        
+        if (venues.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum venue encontrado</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = venues.map(venue => `
+            <tr>
+                <td>${venue.name}</td>
+                <td>${getVenueTypeLabel(venue.type)}</td>
+                <td>${formatVenueLocation(venue)}</td>
+                <td>${venue.capacity ? venue.capacity.toLocaleString() : 'N/A'}</td>
+                <td>-</td> <!-- Eventos será carregado separadamente se necessário -->
+                <td><span class="status-badge status-${venue.is_active ? 'published' : 'cancelled'}">${venue.is_active ? 'Ativo' : 'Inativo'}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" onclick="editVenue('${venue.id}')">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteVenue('${venue.id}')">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar venues:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444;">Erro ao carregar venues: ${error.message}</td></tr>`;
+    }
+}
+
+// Função auxiliar para formatar a localização do venue
+function formatVenueLocation(venue) {
+    const parts = [];
+    if (venue.city) parts.push(venue.city);
+    if (venue.state) parts.push(venue.state);
+    if (venue.country) parts.push(venue.country);
+    return parts.join(', ') || 'N/A';
+}
+
+// Função auxiliar para obter o label do tipo de venue (você pode ajustar conforme seus tipos)
+function getVenueTypeLabel(type) {
+    const typeLabels = {
+        'theater': 'Teatro',
+        'concert_hall': 'Casa de Shows',
+        'stadium': 'Estádio',
+        'arena': 'Arena',
+        'club': 'Clube',
+        'outdoor': 'Área Externa',
+        'conference_center': 'Centro de Convenções',
+        'other': 'Outro'
+    };
+    return typeLabels[type] || type;
+}
 
         // Load Bookings Table
         function loadBookingsTable(filter = 'all') {
@@ -1470,7 +1515,25 @@ async function loadEventsTable(filter = 'all') {
             document.getElementById(modalId).classList.remove('active');
         }
 
-        function populateVenueSelect() {
+        async function populateVenueSelect() {
+            let url = '/api/venues';
+            const response = await fetch(url, {
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar venues');
+        }
+        
+        
+        const data = await response.json();
+        console.log(data);
+            const venues = data.venues || [];
+            
+            // Se você tiver uma lista de venues pré-carregada, use-a aqui
+            // venues = data.venues || [];
+        // const venues = data.venues || [];
+
             const select = document.getElementById('eventVenue');
             select.innerHTML = '<option value="">Selecione um local</option>' + 
                 venues.map(venue => `<option value="${venue.id}">${venue.name}</option>`).join('');
@@ -1484,7 +1547,7 @@ async function loadEventsTable(filter = 'all') {
         const response = await fetch(`/api/events/${id}`, {
             credentials: 'include' 
     });
-    
+
         const data = await response.json();
         
         if (!response.ok) {
@@ -1737,13 +1800,15 @@ document.getElementById('eventForm').addEventListener('submit', async function(e
             title: document.getElementById('eventTitle').value,
             description: document.getElementById('eventDescription').value,
             type: document.getElementById('eventType').value,
-            venue_id: parseInt(document.getElementById('eventVenue').value),
+            venue_id: document.getElementById('eventVenue').value,
             start_date_time: document.getElementById('eventStartDate').value,
             end_date_time: document.getElementById('eventEndDate').value,
             price: parseFloat(document.getElementById('eventPrice').value),
             available_tickets: parseInt(document.getElementById('eventTickets').value),
             status: document.getElementById('eventStatus').value
         };
+
+        console.log('Dados do evento:', formData);
         
         // Verificar se é edição ou criação
         const editId = this.dataset.editId;
