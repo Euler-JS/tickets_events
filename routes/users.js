@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { supabase } = require('../config/supabase');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
-const { authorize, authorizeOwnerOrAdmin } = require('../middleware/auth');
+const { authorize, authorizeOwnerOrAdmin, authenticate } = require('../middleware/auth');
 const { validateChangePassword } = require('../validators/auth');
 
 const router = express.Router();
@@ -417,7 +417,7 @@ router.delete('/:id', authorize('admin'), asyncHandler(async (req, res) => {
  * GET /api/users/:id/bookings
  * Listar reservas de um usuário (admin ou próprio usuário)
  */
-router.get('/:id/bookings', authorizeOwnerOrAdmin, asyncHandler(async (req, res) => {
+router.get('/:id/bookings', authenticate, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const {
     page = 1,

@@ -1,7 +1,7 @@
 const express = require('express');
 const { supabase } = require('../config/supabase');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
-const { authorize } = require('../middleware/auth');
+const { authorize, authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
  * GET /api/events
  * Listar eventos (com filtros e paginação)
  */
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/',authenticate, asyncHandler(async (req, res) => {
   const {
     page = 1,
     limit = 10,
@@ -105,7 +105,7 @@ router.get('/', asyncHandler(async (req, res) => {
  * GET /api/events/:id
  * Buscar evento específico
  */
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id',authenticate, asyncHandler(async (req, res) => {
   const { id } = req.params;
 
   const { data: event, error } = await supabase
@@ -246,6 +246,9 @@ router.post('/', authorize('venue_manager', 'admin'), asyncHandler(async (req, r
 router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  console.log(req.body)
+  console.log('Atualizando evento com ID:', id);
+  console.log('Dados recebidos:', req.params);
   // Buscar evento atual
   const { data: currentEvent, error: fetchError } = await supabase
     .from('events')
@@ -256,7 +259,6 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
     .eq('id', id)
     .eq('is_active', true)
     .is('deleted_at', null)
-    .single();
 
   if (fetchError || !currentEvent) {
     throw new AppError('Evento não encontrado', 404, 'EVENT_NOT_FOUND');
@@ -270,21 +272,21 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
   const updateData = {
     title: req.body.title,
     description: req.body.description,
-    type: req.body.type,
-    category: req.body.category,
-    start_date_time: req.body.start_date_time,
-    end_date_time: req.body.end_date_time,
-    age_rating: req.body.age_rating,
-    language: req.body.language,
-    subtitles: req.body.subtitles,
-    poster_url: req.body.poster_url,
-    trailer_url: req.body.trailer_url,
-    price: req.body.price,
-    currency: req.body.currency,
-    available_tickets: req.body.available_tickets,
-    max_tickets_per_user: req.body.max_tickets_per_user,
-    status: req.body.status,
-    metadata: req.body.metadata
+    // type: req.body.type,
+    // category: req.body.category,
+    // start_date_time: req.body.start_date_time,
+    // end_date_time: req.body.end_date_time,
+    // age_rating: req.body.age_rating,
+    // language: req.body.language,
+    // subtitles: req.body.subtitles,
+    // poster_url: req.body.poster_url,
+    // trailer_url: req.body.trailer_url,
+    // price: req.body.price,
+    // currency: req.body.currency,
+    // available_tickets: req.body.available_tickets,
+    // max_tickets_per_user: req.body.max_tickets_per_user,
+    // status: req.body.status,
+    // metadata: req.body.metadata
   };
 
   // Remover campos undefined
@@ -294,11 +296,22 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
     }
   });
 
-  // Atualizar evento
-  const { data: event, error } = await supabase
+  console.log('Dados para atualização:', updateData);
+
+  // Fazer UPDATE primeiro
+  const { error: updateError } = await supabase
     .from('events')
     .update(updateData)
     .eq('id', id)
+    .select();
+
+  if (updateError) {
+    throw new AppError('Erro ao atualizar evento: ' + updateError.message, 500, 'UPDATE_ERROR');
+  }
+
+  // Buscar evento atualizado
+  const { data: event, error: selectError } = await supabase
+    .from('events')
     .select(`
       *,
       venues (
@@ -310,10 +323,21 @@ router.put('/:id', authorize('venue_manager', 'admin'), asyncHandler(async (req,
         country
       )
     `)
+    .eq('id', id)
     .single();
 
-  if (error) {
-    throw new AppError('Erro ao atualizar evento: ' + error.message, 500, 'UPDATE_ERROR');
+    console.log('Evento atualizado:', event);
+
+    if (updateError) {
+  throw new AppError('Erro ao atualizar evento: ' + updateError.message, 500, 'UPDATE_ERROR');
+}
+
+if (!updatedRows || updatedRows.length === 0) {
+  throw new AppError('Evento não foi alterado. Verifique se os dados mudaram ou se o ID existe.', 400, 'NO_UPDATE');
+}
+
+  if (selectError || !event) {
+    throw new AppError('Erro ao buscar evento atualizado: ' + (selectError?.message || 'Evento não encontrado'), 500, 'SELECT_ERROR');
   }
 
   res.json({

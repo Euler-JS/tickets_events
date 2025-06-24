@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub - Sistema de Gestão de Eventos</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* Gradient Background */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gradient-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            animation: float 20s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(1deg);
+            }
+        }
+
+        /* Header */
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 5%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 5%;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero-text p {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .stats {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .stat {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* Dashboard Preview */
+        .dashboard-preview {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: float-card 6s ease-in-out infinite;
+        }
+
+        @keyframes float-card {
+
+            0%,
+            100% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .dashboard-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            color: white;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .mini-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .mini-card h4 {
+            color: white;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mini-card .value {
+            color: #4ade80;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 6rem 5%;
+            background: #f8fafc;
+        }
+
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .features h2 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .features-subtitle {
+            font-size: 1.1rem;
+            color: #64748b;
+            margin-bottom: 4rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-icon i {
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            padding: 6rem 5%;
+            text-align: center;
+            color: white;
+        }
+
+        .cta-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .cta-section p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        /* Login Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 3rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-header h3 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .hero-text h1 {
+                font-size: 2.5rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ffffff33;
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <nav>
+            <a href="#" class="logo">
+                <i class="fas fa-calendar-star"></i> EventHub
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">Início</a></li>
+                <li><a href="#features">Recursos</a></li>
+                <li><a href="#pricing">Preços</a></li>
+                <li><a href="#contact">Contato</a></li>
+            </ul>
+            <div class="auth-buttons">
+                <button class="btn btn-secondary" onclick="openModal('login')">Entrar</button>
+                <button class="btn btn-primary" onclick="openModal('register')">Cadastrar</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero gradient-bg" id="home">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1>Gerencie Eventos com <span
+                        style="background: linear-gradient(45deg, #4ade80, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Facilidade</span>
+                </h1>
+                <p>Plataforma completa para criar, gerenciar e vender ingressos para seus eventos. Simplifique sua
+                    operação e maximize seus resultados.</p>
+                <div class="hero-cta">
+                    <button class="btn btn-primary" onclick="openModal('register')">
+                        <i class="fas fa-rocket"></i> Começar Agora
+                    </button>
+                    <button class="btn btn-secondary" onclick="showDemo()">
+                        <i class="fas fa-play"></i> Ver Demo
+                    </button>
+                </div>
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-number">1,000+</span>
+                        <span class="stat-label">Eventos Criados</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">50k+</span>
+                        <span class="stat-label">Ingressos Vendidos</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-number">99.9%</span>
+                        <span class="stat-label">Uptime</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dashboard-preview">
+                <div class="dashboard-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Dashboard de Eventos</h3>
+                </div>
+                <div class="dashboard-cards">
+                    <div class="mini-card">
+                        <h4>Eventos Ativos</h4>
+                        <div class="value">12</div>
+                    </div>
+                    <div class="mini-card">
+                        <h4>Ingressos Vendidos</h4>
+                        <div class="value">2,847</div>
+                    </div>
+                    <div class="mini-card">
+                        <h4>Receita do Mês</h4>
+                        <div class="value">R$ 45.2k</div>
+                    </div>
+                    <div class="mini-card">
+                        <h4>Taxa de Conversão</h4>
+                        <div class="value">78%</div>
+                    </div>
+                </div>
+                <div
+                    style="background: rgba(255,255,255,0.1); height: 100px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7);">
+                    <i class="fas fa-chart-area" style="font-size: 2rem;"></i>
+                    <span style="margin-left: 1rem;">Gráfico de Vendas</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2>Recursos Poderosos</h2>
+            <p class="features-subtitle">Tudo que você precisa para criar e gerenciar eventos de sucesso</p>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h3>Criação de Eventos</h3>
+                    <p>Interface intuitiva para criar eventos com todas as informações necessárias, datas, locais e
+                        configurações personalizadas.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-ticket-alt"></i>
+                    </div>
+                    <h3>Gestão de Ingressos</h3>
+                    <p>Sistema completo de ingressos com diferentes tipos, preços, descontos e controle de estoque em
+                        tempo real.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Analytics Avançado</h3>
+                    <p>Relatórios detalhados sobre vendas, público-alvo e performance dos eventos para otimizar seus
+                        resultados.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <h3>App Mobile</h3>
+                    <p>Aplicativo responsivo para gerenciar eventos, verificar ingressos e acompanhar vendas de qualquer
+                        lugar.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <h3>Pagamentos Seguros</h3>
+                    <p>Integração com principais gateways de pagamento, processamento seguro e repasse automático.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3>Gestão de Participantes</h3>
+                    <p>Controle completo de participantes, check-in digital, comunicação automatizada e lista de
+                        presença.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="cta-container">
+            <h2>Pronto para Começar?</h2>
+            <p>Crie sua conta gratuita e comece a gerenciar seus eventos hoje mesmo. Sem compromisso, sem cartão de
+                crédito.</p>
+            <button class="btn btn-primary" onclick="openModal('register')">
+                <i class="fas fa-rocket"></i> Criar Conta Grátis
+            </button>
+        </div>
+    </section>
+
+    <!-- Login/Register Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeModal()">&times;</button>
+            <div class="modal-header">
+                <h3 id="modal-title">Entrar</h3>
+                <p id="modal-subtitle">Acesse sua conta</p>
+            </div>
+
+            <form id="auth-form">
+                <div class="form-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="seu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" placeholder="Sua senha" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-bottom: 1rem;" id="submit-btn">
+                    <span id="btn-text">Entrar</span>
+                    <span id="btn-loading" class="loading hidden"></span>
+                </button>
+
+                <p style="text-align: center; color: #6b7280;">
+                    <span id="toggle-text">Não tem conta? </span>
+                    <a href="#" onclick="toggleAuthMode()" style="color: #667eea; font-weight: 600;">
+                        <span id="toggle-link">Cadastre-se</span>
+                    </a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let isLoginMode = true;
+        let apiBaseUrl = '/api';
+
+        // Modal functions
+        function openModal(mode) {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'block';
+
+            if (mode === 'login') {
+                setLoginMode();
+            } else {
+                setRegisterMode();
+            }
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+            resetForm();
+        }
+
+        function setLoginMode() {
+            isLoginMode = true;
+            document.getElementById('modal-title').textContent = 'Entrar';
+            document.getElementById('modal-subtitle').textContent = 'Acesse sua conta';
+            document.getElementById('name-group').style.display = 'none';
+            document.getElementById('btn-text').textContent = 'Entrar';
+            document.getElementById('toggle-text').textContent = 'Não tem conta? ';
+            document.getElementById('toggle-link').textContent = 'Cadastre-se';
+        }
+
+        function setRegisterMode() {
+            isLoginMode = false;
+            document.getElementById('modal-title').textContent = 'Cadastrar';
+            document.getElementById('modal-subtitle').textContent = 'Crie sua conta grátis';
+            document.getElementById('name-group').style.display = 'block';
+            document.getElementById('btn-text').textContent = 'Cadastrar';
+            document.getElementById('toggle-text').textContent = 'Já tem conta? ';
+            document.getElementById('toggle-link').textContent = 'Faça login';
+        }
+
+        function toggleAuthMode() {
+            if (isLoginMode) {
+                setRegisterMode();
+            } else {
+                setLoginMode();
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('auth-form').reset();
+            document.getElementById('btn-text').classList.remove('hidden');
+            document.getElementById('btn-loading').classList.add('hidden');
+            document.getElementById('submit-btn').disabled = false;
+        }
+
+        // Form submission
+        document.getElementById('auth-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submit-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+
+            // Show loading
+            btnText.classList.add('hidden');
+            btnLoading.classList.remove('hidden');
+            submitBtn.disabled = true;
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const endpoint = isLoginMode ? '/api/auth/login' : '/api/auth/register';
+
+                // Para registro, ajustar os dados
+                let requestData = data;
+                if (!isLoginMode) {
+                    const [firstName, ...lastNameParts] = data.name.split(' ');
+                    requestData = {
+                        email: data.email,
+                        password: data.password,
+                        firstName: firstName,
+                        lastName: lastNameParts.join(' ') || '',
+                        phone: '', // Adicione campo se necessário
+                        dateOfBirth: null // Adicione campo se necessário
+                    };
+                }
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    if (isLoginMode) {
+                        // Login - apenas salvar dados do usuário (cookie é automático)
+                        localStorage.setItem('user', JSON.stringify(result.user));
+
+                        // alert('Login realizado com sucesso!');
+                        window.location.href = '/dashboard';
+                    } else {
+                        alert('Conta criada com sucesso! Agora faça login.');
+                        setLoginMode();
+                    }
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro de conexão. Tente novamente.');
+            } finally {
+                // Hide loading
+                btnText.classList.remove('hidden');
+                btnLoading.classList.add('hidden');
+                submitBtn.disabled = false;
+            }
+        });
+        // Demo function
+        function showDemo() {
+            alert('Demo será disponibilizada em breve! Por enquanto, você pode criar uma conta para explorar todas as funcionalidades.');
+        }
+
+        // Smooth scrolling for navigation
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            const modal = document.getElementById('modal');
+            if (e.target === modal) {
+                closeModal();
+            }
+        });
+
+        // Header scroll effect
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if (window.scrollY > 100) {
+                header.style.background = 'rgba(255, 255, 255, 0.98)';
+                header.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+            } else {
+                header.style.background = 'rgba(255, 255, 255, 0.95)';
+                header.style.boxShadow = 'none';
+            }
+        });
+
+        // Check if user is already logged in
+        if (localStorage.getItem('token')) {
+            // User is logged in, maybe redirect to dashboard
+            console.log('User is already logged in');
+        }
+    </script>
+</body>
+
+</html>

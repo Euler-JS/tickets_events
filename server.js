@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 
 // Importar rotas
 const authRoutes = require('./routes/auth');
@@ -11,6 +12,7 @@ const venueRoutes = require('./routes/venues');
 const eventRoutes = require('./routes/events');
 const bookingRoutes = require('./routes/bookings');
 const userRoutes = require('./routes/users');
+const path = require('path');
 
 // Importar middleware - CORRIGIDO
 const { errorHandler, notFound } = require('./middleware/errorHandler');
@@ -37,10 +39,42 @@ app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true
 }));
+// Middlewares de segurança
+app.use(
+ helmet.contentSecurityPolicy({
+  directives: {
+    defaultSrc: ["'self'"],
+    scriptSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "https://unpkg.com"
+    ],
+    scriptSrcAttr: ["'unsafe-inline'"],
+    styleSrc: [
+      "'self'",
+      "'unsafe-inline'",
+      "https://fonts.googleapis.com",
+      "https://cdnjs.cloudflare.com"
+    ],
+    fontSrc: [
+      "'self'",
+      "https://fonts.gstatic.com",
+      "https://unpkg.com",
+      "https://fonts.googleapis.com",
+      "https://cdnjs.cloudflare.com"
+    ],
+    imgSrc: ["'self'", "data:"],
+    connectSrc: ["'self'", "https://unpkg.com"],
+  }
+})
+);
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
+
+app.use(cookieParser());
+app.use(authenticate);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -52,8 +86,46 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Rota para página inicial
+app.get('/start', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'start.html'));
+});
+
+app.get('/dashboard', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+});
+
+app.get('/.well-known/appspecific/com.chrome.devtools.json', (req, res) => {
+  res.status(204).end();
+});
+
+// Rota raiz
+app.get('/', (req, res) => {
+  // res.json({
+  //   message: 'Restaurant Menu API with User Management',
+  //   version: process.env.API_VERSION || 'v1',
+  //   documentation: '/api/docs',
+  //   health: '/health',
+  //   admin: '/admin',
+  //   login: '/login',
+  //   start: '/start',
+  //   endpoints: {
+  //     auth: '/api/v1/auth',
+  //     users: '/api/v1/users',
+  //     restaurants: '/api/v1/restaurants',
+  //     categories: '/api/v1/categories',
+  //     products: '/api/v1/products',
+  //     menu: '/api/v1/menu'
+  //   }
+  // });
+  res.redirect('/start');
+});
+
 // Rotas públicas
 app.use('/api/auth', authRoutes);
+// Rotas públicas temporariamente
+// app.use('/api/events', eventRoutes);
+
 
 // Rotas protegidas
 app.use('/api/venues', authenticate, venueRoutes);

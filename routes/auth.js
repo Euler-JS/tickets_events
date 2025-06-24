@@ -33,25 +33,13 @@ router.post('/register', asyncHandler(async (req, res) => {
     throw new AppError('Email já está em uso', 409, 'EMAIL_EXISTS');
   }
 
-  // Criar usuário no Supabase Auth
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true
-  });
-
-  if (authError) {
-    throw new AppError('Erro ao criar conta: ' + authError.message, 400, 'AUTH_ERROR');
-  }
-
-  // Hash da senha para nossa tabela (backup)
+  // Hash da senha
   const passwordHash = await bcrypt.hash(password, 12);
 
-  // Criar registro na nossa tabela users
+  // Criar usuário na tabela users
   const { data: userData, error: userError } = await supabase
     .from('users')
     .insert({
-      id: authData.user.id,
       first_name: firstName,
       last_name: lastName,
       email,
@@ -65,9 +53,7 @@ router.post('/register', asyncHandler(async (req, res) => {
     .single();
 
   if (userError) {
-    // Limpar usuário do Auth se falhar
-    await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-    throw new AppError('Erro ao criar perfil: ' + userError.message, 500, 'PROFILE_ERROR');
+    throw new AppError('Erro ao criar conta: ' + userError.message, 500, 'CREATE_USER_ERROR');
   }
 
   res.status(201).json({
@@ -92,29 +78,25 @@ router.post('/login', asyncHandler(async (req, res) => {
 
   const { email, password } = value;
 
-  // Fazer login no Supabase
-  const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (authError) {
-    throw new AppError('Email ou senha incorretos', 401, 'INVALID_CREDENTIALS');
-  }
-
-  // Buscar dados do usuário
+  // Buscar usuário na tabela users
   const { data: userData, error: userError } = await supabase
     .from('users')
-    .select('id, first_name, last_name, email, role, is_active, last_login_at')
-    .eq('id', authData.user.id)
+    .select('id, first_name, last_name, email, password_hash, role, is_active, last_login_at')
+    .eq('email', email)
     .single();
 
   if (userError || !userData) {
-    throw new AppError('Usuário não encontrado', 404, 'USER_NOT_FOUND');
+    throw new AppError('Email ou senha incorretos', 401, 'INVALID_CREDENTIALS');
   }
 
   if (!userData.is_active) {
     throw new AppError('Conta desativada', 403, 'ACCOUNT_DISABLED');
+  }
+
+  // Verificar senha
+  const isValidPassword = await bcrypt.compare(password, userData.password_hash);
+  if (!isValidPassword) {
+    throw new AppError('Email ou senha incorretos', 401, 'INVALID_CREDENTIALS');
   }
 
   // Atualizar last_login_at
@@ -123,14 +105,26 @@ router.post('/login', asyncHandler(async (req, res) => {
     .update({ last_login_at: new Date().toISOString() })
     .eq('id', userData.id);
 
+  // Remover password_hash da resposta
+  const { password_hash, ...userResponse } = userData;
+
+  // Definir cookie com dados do usuário
+  res.cookie('user_session', JSON.stringify({
+    id: userData.id,
+    email: userData.email,
+    role: userData.role,
+    first_name: userData.first_name,
+    last_name: userData.last_name
+  }), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000, // 24 horas
+    sameSite: 'lax'
+  });
+
   res.json({
     message: 'Login realizado com sucesso',
-    user: userData,
-    session: {
-      access_token: authData.session.access_token,
-      refresh_token: authData.session.refresh_token,
-      expires_at: authData.session.expires_at
-    }
+    user: userResponse
   });
 }));
 

@@ -1,0 +1,1883 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Sistema de Eventos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-menu {
+            padding: 24px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            margin: 4px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #666;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            fill: currentColor;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 24px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.expanded {
+            margin-left: 0;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #667eea;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 50px;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .stat-icon.purple { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .stat-icon.blue { background: linear-gradient(135deg, #4facfe, #00f2fe); }
+        .stat-icon.green { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .stat-icon.orange { background: linear-gradient(135deg, #fa709a, #fee140); }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive { color: #22c55e; }
+        .stat-change.negative { color: #ef4444; }
+
+        /* Content Sections */
+        .content-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-table th {
+            background: #f8fafc;
+            padding: 16px;
+            text-align: left;
+            font-weight: 600;
+            color: #334155;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .data-table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-published { background: #dcfce7; color: #166534; }
+        .status-draft { background: #fef3c7; color: #92400e; }
+        .status-cancelled { background: #fee2e2; color: #991b1b; }
+        .status-confirmed { background: #dbeafe; color: #1e40af; }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-completed { background: #dcfce7; color: #166534; }
+        .status-refunded { background: #f3e8ff; color: #7c3aed; }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        .quick-action {
+            padding: 8px 12px;
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .quick-action:hover, .quick-action.active {
+            background: rgba(102, 126, 234, 0.2);
+            transform: translateY(-1px);
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            opacity: 0.5;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-right {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .quick-actions {
+                width: 100%;
+            }
+
+            .data-table {
+                font-size: 14px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 12px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🎫 EventAdmin</div>
+            </div>
+            <div class="nav-menu">
+                <a href="#" class="nav-item active" data-section="overview">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-section="events">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Eventos
+                </a>
+                <a href="#" class="nav-item" data-section="venues">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    Locais
+                </a>
+                <a href="#" class="nav-item" data-section="bookings">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14,2 14,8 20,8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10,9 9,9 8,9"></polyline>
+                    </svg>
+                    Reservas
+                </a>
+                <a href="#" class="nav-item" data-section="users">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    Usuários
+                </a>
+                <a href="#" class="nav-item" data-section="reports">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    Relatórios
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">☰</button>
+                    <h1 class="header-title" id="pageTitle">Dashboard</h1>
+                </div>
+                <div class="header-right">
+                    <div class="user-info">
+                        <div class="user-avatar">A</div>
+                        <span>Admin</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <div id="overview-section" class="content-section active">
+                <!-- Stats Grid -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalEvents">142</div>
+                                <div class="stat-label">Total de Eventos</div>
+                                <div class="stat-change positive">
+                                    <span>↗</span> +12% este mês
+                                </div>
+                            </div>
+                            <div class="stat-icon purple">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalBookings">3,247</div>
+                                <div class="stat-label">Total de Reservas</div>
+                                <div class="stat-change positive">
+                                    <span>↗</span> +8% este mês
+                                </div>
+                            </div>
+                            <div class="stat-icon blue">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h16c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalRevenue">R$ 89.450</div>
+                                <div class="stat-label">Receita Total</div>
+                                <div class="stat-change positive">
+                                    <span>↗</span> +15% este mês
+                                </div>
+                            </div>
+                            <div class="stat-icon green">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value" id="totalUsers">1,856</div>
+                                <div class="stat-label">Usuários Ativos</div>
+                                <div class="stat-change positive">
+                                    <span>↗</span> +5% este mês
+                                </div>
+                            </div>
+                            <div class="stat-icon orange">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M16 7c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5 5-2.24 5-5zM12 14c-3.86 0-7 1.79-7 4v2h14v-2c0-2.21-3.14-4-7-4z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Revenue Chart -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Receita dos Últimos 30 Dias</h2>
+                        <button class="btn btn-secondary">Exportar</button>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Bookings -->
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Últimas Reservas</h2>
+                        <button class="btn btn-secondary" onclick="showSection('bookings')">Ver Todas</button>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Número</th>
+                                <th>Evento</th>
+                                <th>Cliente</th>
+                                <th>Quantidade</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recentBookingsTable">
+                            <tr>
+                                <td>BK-20231125-A4F2B1</td>
+                                <td>Show do Coldplay</td>
+                                <td>Maria Silva</td>
+                                <td>2</td>
+                                <td>R$ 540,00</td>
+                                <td><span class="status-badge status-confirmed">Confirmado</span></td>
+                                <td>25/11/2023</td>
+                            </tr>
+                            <tr>
+                                <td>BK-20231125-B8C3D2</td>
+                                <td>Peça: Hamlet</td>
+                                <td>João Santos</td>
+                                <td>4</td>
+                                <td>R$ 320,00</td>
+                                <td><span class="status-badge status-pending">Pendente</span></td>
+                                <td>25/11/2023</td>
+                            </tr>
+                            <tr>
+                                <td>BK-20231124-C7D4E3</td>
+                                <td>Filme: Avatar 3</td>
+                                <td>Ana Costa</td>
+                                <td>3</td>
+                                <td>R$ 75,00</td>
+                                <td><span class="status-badge status-confirmed">Confirmado</span></td>
+                                <td>24/11/2023</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Events Section -->
+            <div id="events-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Gestão de Eventos</h2>
+                    <button class="btn btn-primary" onclick="openEventModal()">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Novo Evento
+                    </button>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-action active" onclick="filterEvents('all')">Todos</button>
+                    <button class="quick-action" onclick="filterEvents('published')">Publicados</button>
+                    <button class="quick-action" onclick="filterEvents('draft')">Rascunhos</button>
+                    <button class="quick-action" onclick="filterEvents('cancelled')">Cancelados</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Tipo</th>
+                            <th>Local</th>
+                            <th>Data/Hora</th>
+                            <th>Preço</th>
+                            <th>Ingressos</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="eventsTable">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Venues Section -->
+            <div id="venues-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Gestão de Locais</h2>
+                    <button class="btn btn-primary" onclick="openVenueModal()">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Novo Local
+                    </button>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Tipo</th>
+                            <th>Localização</th>
+                            <th>Capacidade</th>
+                            <th>Eventos</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="venuesTable">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bookings Section -->
+            <div id="bookings-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Gestão de Reservas</h2>
+                </div>
+                
+                <div class="quick-actions">
+                    <button class="quick-action active" onclick="filterBookings('all')">Todas</button>
+                    <button class="quick-action" onclick="filterBookings('pending')">Pendentes</button>
+                    <button class="quick-action" onclick="filterBookings('confirmed')">Confirmadas</button>
+                    <button class="quick-action" onclick="filterBookings('cancelled')">Canceladas</button>
+                </div>
+
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Número da Reserva</th>
+                            <th>Evento</th>
+                            <th>Cliente</th>
+                            <th>Quantidade</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Pagamento</th>
+                            <th>Data</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookingsTable">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Gestão de Usuários</h2>
+                    <button class="btn btn-primary" onclick="openUserModal()">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        Novo Usuário
+                    </button>
+                </div>
+                
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Email</th>
+                            <th>Telefone</th>
+                            <th>Função</th>
+                            <th>Último Login</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTable">
+                        <!-- Dados serão carregados via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Reports Section -->
+            <div id="reports-section" class="content-section">
+                <div class="section-header">
+                    <h2 class="section-title">Relatórios e Analytics</h2>
+                    <button class="btn btn-secondary">Gerar Relatório</button>
+                </div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">87%</div>
+                                <div class="stat-label">Taxa de Ocupação</div>
+                            </div>
+                            <div class="stat-icon blue">📊</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">R$ 45.200</div>
+                                <div class="stat-label">Receita Semanal</div>
+                            </div>
+                            <div class="stat-icon green">💰</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <div>
+                                <div class="stat-value">234</div>
+                                <div class="stat-label">Novos Usuários</div>
+                            </div>
+                            <div class="stat-icon orange">👥</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="content-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Eventos Mais Populares</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="popularEventsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Evento</h3>
+                <button class="close-btn" onclick="closeModal('eventModal')">&times;</button>
+            </div>
+            <form id="eventForm">
+                <div class="form-group">
+                    <label class="form-label">Título do Evento</label>
+                    <input type="text" class="form-input" id="eventTitle" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-textarea" id="eventDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" id="eventType">
+                        <option value="movie">Filme</option>
+                        <option value="concert">Show</option>
+                        <option value="sports">Esporte</option>
+                        <option value="theater">Teatro</option>
+                        <option value="conference">Conferência</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Local</label>
+                    <select class="form-select" id="eventVenue">
+                        <option value="">Selecione um local</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data e Hora de Início</label>
+                    <input type="datetime-local" class="form-input" id="eventStartDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Data e Hora de Fim</label>
+                    <input type="datetime-local" class="form-input" id="eventEndDate" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Preço (R$)</label>
+                    <input type="number" class="form-input" id="eventPrice" step="0.01" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ingressos Disponíveis</label>
+                    <input type="number" class="form-input" id="eventTickets" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="eventStatus">
+                        <option value="draft">Rascunho</option>
+                        <option value="published">Publicado</option>
+                        <option value="cancelled">Cancelado</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('eventModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Evento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Venue Modal -->
+    <div id="venueModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Local</h3>
+                <button class="close-btn" onclick="closeModal('venueModal')">&times;</button>
+            </div>
+            <form id="venueForm">
+                <div class="form-group">
+                    <label class="form-label">Nome do Local</label>
+                    <input type="text" class="form-input" id="venueName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tipo</label>
+                    <select class="form-select" id="venueType">
+                        <option value="cinema">Cinema</option>
+                        <option value="stadium">Estádio</option>
+                        <option value="theater">Teatro</option>
+                        <option value="arena">Arena</option>
+                        <option value="conference_hall">Sala de Conferência</option>
+                        <option value="other">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Descrição</label>
+                    <textarea class="form-textarea" id="venueDescription"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Endereço</label>
+                    <input type="text" class="form-input" id="venueAddress" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Cidade</label>
+                    <input type="text" class="form-input" id="venueCity" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estado</label>
+                    <input type="text" class="form-input" id="venueState" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Capacidade</label>
+                    <input type="number" class="form-input" id="venueCapacity" min="1" required>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('venueModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Local</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Novo Usuário</h3>
+                <button class="close-btn" onclick="closeModal('userModal')">&times;</button>
+            </div>
+            <form id="userForm">
+                <div class="form-group">
+                    <label class="form-label">Nome</label>
+                    <input type="text" class="form-input" id="userFirstName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Sobrenome</label>
+                    <input type="text" class="form-input" id="userLastName" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="userEmail" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Telefone</label>
+                    <input type="tel" class="form-input" id="userPhone">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Função</label>
+                    <select class="form-select" id="userRole">
+                        <option value="customer">Cliente</option>
+                        <option value="venue_manager">Gerente de Local</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('userModal')">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Data Storage (simulando database)
+        // let events = [
+        //     {
+        //         id: 1,
+        //         title: "Show do Coldplay",
+        //         type: "concert",
+        //         venue: "Arena Corinthians",
+        //         startDate: "2024-01-15T20:00",
+        //         endDate: "2024-01-15T23:00",
+        //         price: 270.00,
+        //         availableTickets: 45000,
+        //         status: "published"
+        //     },
+        //     {
+        //         id: 2,
+        //         title: "Peça: Hamlet",
+        //         type: "theater",
+        //         venue: "Teatro Municipal",
+        //         startDate: "2024-01-20T19:30",
+        //         endDate: "2024-01-20T22:00",
+        //         price: 80.00,
+        //         availableTickets: 350,
+        //         status: "published"
+        //     },
+        //     {
+        //         id: 3,
+        //         title: "Filme: Avatar 3",
+        //         type: "movie",
+        //         venue: "Cinema Central",
+        //         startDate: "2024-01-25T21:00",
+        //         endDate: "2024-01-25T23:30",
+        //         price: 25.00,
+        //         availableTickets: 180,
+        //         status: "draft"
+        //     }
+        // ];
+
+        let venues = [
+            {
+                id: 1,
+                name: "Arena Corinthians",
+                type: "stadium",
+                location: "São Paulo, SP",
+                capacity: 47000,
+                events: 12,
+                status: "active"
+            },
+            {
+                id: 2,
+                name: "Teatro Municipal",
+                type: "theater",
+                location: "São Paulo, SP",
+                capacity: 500,
+                events: 8,
+                status: "active"
+            },
+            {
+                id: 3,
+                name: "Cinema Central",
+                type: "cinema",
+                location: "São Paulo, SP",
+                capacity: 220,
+                events: 45,
+                status: "active"
+            }
+        ];
+
+        let bookings = [
+            {
+                id: 1,
+                bookingNumber: "BK-20231125-A4F2B1",
+                event: "Show do Coldplay",
+                customer: "Maria Silva",
+                quantity: 2,
+                total: 540.00,
+                status: "confirmed",
+                paymentStatus: "paid",
+                date: "2023-11-25"
+            },
+            {
+                id: 2,
+                bookingNumber: "BK-20231125-B8C3D2",
+                event: "Peça: Hamlet",
+                customer: "João Santos",
+                quantity: 4,
+                total: 320.00,
+                status: "pending",
+                paymentStatus: "pending",
+                date: "2023-11-25"
+            },
+            {
+                id: 3,
+                bookingNumber: "BK-20231124-C7D4E3",
+                event: "Filme: Avatar 3",
+                customer: "Ana Costa",
+                quantity: 3,
+                total: 75.00,
+                status: "confirmed",
+                paymentStatus: "paid",
+                date: "2023-11-24"
+            },
+            {
+                id: 4,
+                bookingNumber: "BK-20231124-D8E5F4",
+                event: "Show do Coldplay",
+                customer: "Pedro Lima",
+                quantity: 1,
+                total: 270.00,
+                status: "cancelled",
+                paymentStatus: "refunded",
+                date: "2023-11-24"
+            }
+        ];
+
+        let users = [
+            {
+                id: 1,
+                name: "Maria Silva",
+                email: "maria@email.com",
+                phone: "+55 11 99999-9999",
+                role: "customer",
+                lastLogin: "2023-11-25",
+                status: "active"
+            },
+            {
+                id: 2,
+                name: "Admin Sistema",
+                email: "admin@ticketing.com",
+                phone: "+55 11 88888-8888",
+                role: "admin",
+                lastLogin: "2023-11-25",
+                status: "active"
+            },
+            {
+                id: 3,
+                name: "Carlos Venue",
+                email: "carlos@venue.com",
+                phone: "+55 11 77777-7777",
+                role: "venue_manager",
+                lastLogin: "2023-11-24",
+                status: "active"
+            }
+        ];
+
+        // Navigation
+        function showSection(sectionName) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to selected nav item
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+            
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(`${sectionName}-section`).classList.add('active');
+            
+            // Update page title
+            const titles = {
+                overview: 'Dashboard',
+                events: 'Gestão de Eventos',
+                venues: 'Gestão de Locais',
+                bookings: 'Gestão de Reservas',
+                users: 'Gestão de Usuários',
+                reports: 'Relatórios'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionName];
+            
+            // Load section data
+            loadSectionData(sectionName);
+        }
+
+        // Load section data
+        function loadSectionData(section) {
+            switch(section) {
+                case 'events':
+                    loadEventsTable();
+                    break;
+                case 'venues':
+                    loadVenuesTable();
+                    break;
+                case 'bookings':
+                    loadBookingsTable();
+                    break;
+                case 'users':
+                    loadUsersTable();
+                    break;
+                case 'reports':
+                    loadReportsCharts();
+                    break;
+            }
+        }
+
+        // Load Events Table
+        // Load Events Table
+async function loadEventsTable(filter = 'all') {
+    const tbody = document.getElementById('eventsTable');
+    
+    try {
+        // Mostrar loading
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;"><div class="loading"></div> Carregando eventos...</td></tr>';
+        
+        // Fazer chamada para API
+        let url = '/api/events';
+        if (filter !== 'all') {
+            url += `?status=${filter}`;
+        }
+        
+        const response = await fetch(url, {
+            credentials: 'include' 
+    })
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar eventos');
+        }
+        
+        const events = data.events || [];
+        
+        if (events.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Nenhum evento encontrado</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = events.map(event => `
+            <tr>
+                <td>${event.title}</td>
+                <td>${getEventTypeLabel(event.type)}</td>
+                <td>${event.venues ? event.venues.name : 'N/A'}</td>
+                <td>${formatDateTime(event.start_date_time)}</td>
+                <td>R$ ${parseFloat(event.price).toFixed(2)}</td>
+                <td>${event.available_tickets}</td>
+                <td><span class="status-badge status-${event.status}">${getStatusLabel(event.status)}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" onclick="editEvent('${event.id}')">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.id}')">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar eventos:', error);
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: #ef4444;">Erro ao carregar eventos: ${error.message}</td></tr>`;
+    }
+}
+        // Load Venues Table
+        function loadVenuesTable() {
+            const tbody = document.getElementById('venuesTable');
+            tbody.innerHTML = venues.map(venue => `
+                <tr>
+                    <td>${venue.name}</td>
+                    <td>${getVenueTypeLabel(venue.type)}</td>
+                    <td>${venue.location}</td>
+                    <td>${venue.capacity.toLocaleString()}</td>
+                    <td>${venue.events}</td>
+                    <td><span class="status-badge status-${venue.status === 'active' ? 'published' : 'cancelled'}">${venue.status === 'active' ? 'Ativo' : 'Inativo'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" onclick="editVenue(${venue.id})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteVenue(${venue.id})">Excluir</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load Bookings Table
+        function loadBookingsTable(filter = 'all') {
+            const tbody = document.getElementById('bookingsTable');
+            let filteredBookings = bookings;
+            
+            if (filter !== 'all') {
+                filteredBookings = bookings.filter(booking => booking.status === filter);
+            }
+            
+            tbody.innerHTML = filteredBookings.map(booking => `
+                <tr>
+                    <td>${booking.bookingNumber}</td>
+                    <td>${booking.event}</td>
+                    <td>${booking.customer}</td>
+                    <td>${booking.quantity}</td>
+                    <td>R$ ${booking.total.toFixed(2)}</td>
+                    <td><span class="status-badge status-${booking.status}">${getStatusLabel(booking.status)}</span></td>
+                    <td><span class="status-badge status-${booking.paymentStatus === 'paid' ? 'confirmed' : booking.paymentStatus}">${getPaymentStatusLabel(booking.paymentStatus)}</span></td>
+                    <td>${formatDate(booking.date)}</td>
+                    <td>
+                        <div class="action-buttons">
+                            ${booking.status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="confirmBooking(${booking.id})">Confirmar</button>` : ''}
+                            <button class="btn btn-sm btn-danger" onclick="cancelBooking(${booking.id})">Cancelar</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Load Users Table
+        function loadUsersTable() {
+            const tbody = document.getElementById('usersTable');
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.phone}</td>
+                    <td>${getRoleLabel(user.role)}</td>
+                    <td>${formatDate(user.lastLogin)}</td>
+                    <td><span class="status-badge status-${user.status === 'active' ? 'published' : 'cancelled'}">${user.status === 'active' ? 'Ativo' : 'Inativo'}</span></td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-secondary" onclick="editUser(${user.id})">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Excluir</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Filter functions
+        function filterEvents(status) {
+            document.querySelectorAll('.quick-action').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadEventsTable(status);
+        }
+
+        function filterBookings(status) {
+            document.querySelectorAll('.quick-action').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            loadBookingsTable(status);
+        }
+
+        // Modal functions
+        function openEventModal() {
+            document.getElementById('eventModal').classList.add('active');
+            populateVenueSelect();
+        }
+
+        function openVenueModal() {
+            document.getElementById('venueModal').classList.add('active');
+        }
+
+        function openUserModal() {
+            document.getElementById('userModal').classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function populateVenueSelect() {
+            const select = document.getElementById('eventVenue');
+            select.innerHTML = '<option value="">Selecione um local</option>' + 
+                venues.map(venue => `<option value="${venue.id}">${venue.name}</option>`).join('');
+        }
+
+        // CRUD operations
+        async function editEvent(id) {
+            console.log(`Editando evento com ID: ${id}`);
+    try {
+        // Fazer chamada para API para buscar dados do evento
+        const response = await fetch(`/api/events/${id}`, {
+            credentials: 'include' 
+    });
+    
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar evento');
+        }
+        
+        const event = data.event;
+        
+        // Preencher o formulário com os dados do evento
+        document.getElementById('eventTitle').value = event.title || '';
+        document.getElementById('eventDescription').value = event.description || '';
+        document.getElementById('eventType').value = event.type || '';
+        document.getElementById('eventVenue').value = event.venue_id || '';
+        document.getElementById('eventStartDate').value = event.start_date_time ? event.start_date_time.slice(0, 16) : '';
+        document.getElementById('eventEndDate').value = event.end_date_time ? event.end_date_time.slice(0, 16) : '';
+        document.getElementById('eventPrice').value = event.price || '';
+        document.getElementById('eventTickets').value = event.available_tickets || '';
+        document.getElementById('eventStatus').value = event.status || 'draft';
+        
+        // Marcar que estamos editando (não criando)
+        document.getElementById('eventForm').dataset.editId = id;
+        document.querySelector('#eventModal .modal-title').textContent = 'Editar Evento';
+        document.querySelector('#eventForm button[type="submit"]').textContent = 'Atualizar Evento';
+        
+        // Abrir modal
+        openEventModal();
+        
+    } catch (error) {
+        console.error('Erro ao carregar evento:', error);
+        alert('Erro ao carregar dados do evento: ' + error.message);
+    }
+}
+
+        function deleteEvent(id) {
+            if (confirm('Tem certeza que deseja excluir este evento?')) {
+                events = events.filter(e => e.id !== id);
+                loadEventsTable();
+            }
+        }
+
+        function editVenue(id) {
+            const venue = venues.find(v => v.id === id);
+            if (venue) {
+                document.getElementById('venueName').value = venue.name;
+                document.getElementById('venueType').value = venue.type;
+                document.getElementById('venueCapacity').value = venue.capacity;
+                openVenueModal();
+            }
+        }
+
+        function deleteVenue(id) {
+            if (confirm('Tem certeza que deseja excluir este local?')) {
+                venues = venues.filter(v => v.id !== id);
+                loadVenuesTable();
+            }
+        }
+
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (user) {
+                const [firstName, ...lastNameParts] = user.name.split(' ');
+                document.getElementById('userFirstName').value = firstName;
+                document.getElementById('userLastName').value = lastNameParts.join(' ');
+                document.getElementById('userEmail').value = user.email;
+                document.getElementById('userPhone').value = user.phone;
+                document.getElementById('userRole').value = user.role;
+                openUserModal();
+            }
+        }
+
+        function deleteUser(id) {
+            if (confirm('Tem certeza que deseja excluir este usuário?')) {
+                users = users.filter(u => u.id !== id);
+                loadUsersTable();
+            }
+        }
+
+        function confirmBooking(id) {
+            const booking = bookings.find(b => b.id === id);
+            if (booking) {
+                booking.status = 'confirmed';
+                booking.paymentStatus = 'paid';
+                loadBookingsTable();
+            }
+        }
+
+        function cancelBooking(id) {
+            if (confirm('Tem certeza que deseja cancelar esta reserva?')) {
+                const booking = bookings.find(b => b.id === id);
+                if (booking) {
+                    booking.status = 'cancelled';
+                    booking.paymentStatus = 'refunded';
+                    loadBookingsTable();
+                }
+            }
+        }
+
+        // Utility functions
+        function getEventTypeLabel(type) {
+            const labels = {
+                movie: 'Filme',
+                concert: 'Show',
+                sports: 'Esporte',
+                theater: 'Teatro',
+                conference: 'Conferência',
+                other: 'Outro'
+            };
+            return labels[type] || type;
+        }
+
+        function getVenueTypeLabel(type) {
+            const labels = {
+                cinema: 'Cinema',
+                stadium: 'Estádio',
+                theater: 'Teatro',
+                arena: 'Arena',
+                conference_hall: 'Sala de Conferência',
+                other: 'Outro'
+            };
+            return labels[type] || type;
+        }
+
+        function getStatusLabel(status) {
+            const labels = {
+                draft: 'Rascunho',
+                published: 'Publicado',
+                cancelled: 'Cancelado',
+                completed: 'Concluído',
+                pending: 'Pendente',
+                confirmed: 'Confirmado',
+                refunded: 'Reembolsado'
+            };
+            return labels[status] || status;
+        }
+
+        function getPaymentStatusLabel(status) {
+            const labels = {
+                pending: 'Pendente',
+                paid: 'Pago',
+                failed: 'Falhou',
+                refunded: 'Reembolsado'
+            };
+            return labels[status] || status;
+        }
+
+        function getRoleLabel(role) {
+            const labels = {
+                customer: 'Cliente',
+                admin: 'Administrador',
+                venue_manager: 'Gerente de Local'
+            };
+            return labels[role] || role;
+        }
+
+        function formatDateTime(dateTime) {
+            return new Date(dateTime).toLocaleString('pt-BR');
+        }
+
+        function formatDate(date) {
+            return new Date(date).toLocaleDateString('pt-BR');
+        }
+
+        // Charts
+        function initializeCharts() {
+            // Revenue Chart
+            const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+            new Chart(revenueCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1 Nov', '5 Nov', '10 Nov', '15 Nov', '20 Nov', '25 Nov', '30 Nov'],
+                    datasets: [{
+                        label: 'Receita (R$)',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function loadReportsCharts() {
+            setTimeout(() => {
+                // Popular Events Chart
+                const popularEventsCtx = document.getElementById('popularEventsChart');
+                if (popularEventsCtx) {
+                    new Chart(popularEventsCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Show do Coldplay', 'Peça: Hamlet', 'Filme: Avatar 3', 'Jogo do Corinthians', 'Conferência Tech'],
+                            datasets: [{
+                                label: 'Ingressos Vendidos',
+                                data: [2500, 450, 1200, 8000, 350],
+                                backgroundColor: [
+                                    '#667eea',
+                                    '#4facfe',
+                                    '#43e97b',
+                                    '#fa709a',
+                                    '#764ba2'
+                                ]
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    display: false
+                                }
+                            }
+                        }
+                    });
+                }
+            }, 100);
+        }
+
+      // Form handlers
+document.getElementById('eventForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
+        
+        const formData = {
+            title: document.getElementById('eventTitle').value,
+            description: document.getElementById('eventDescription').value,
+            type: document.getElementById('eventType').value,
+            venue_id: parseInt(document.getElementById('eventVenue').value),
+            start_date_time: document.getElementById('eventStartDate').value,
+            end_date_time: document.getElementById('eventEndDate').value,
+            price: parseFloat(document.getElementById('eventPrice').value),
+            available_tickets: parseInt(document.getElementById('eventTickets').value),
+            status: document.getElementById('eventStatus').value
+        };
+        
+        // Verificar se é edição ou criação
+        const editId = this.dataset.editId;
+        const isEditing = !!editId;
+        
+        const url = isEditing ? `/api/events/${editId}` : '/api/events';
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include', // Para enviar cookies
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!');
+            closeModal('eventModal');
+            this.reset();
+            delete this.dataset.editId;
+            loadEventsTable(); // Recarregar tabela
+        } else {
+            throw new Error(data.error || data.message || 'Erro ao salvar evento');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao salvar evento:', error);
+        alert('Erro ao salvar evento: ' + error.message);
+    } finally {
+        // Restaurar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
+        document.getElementById('venueForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newVenue = {
+                id: venues.length + 1,
+                name: document.getElementById('venueName').value,
+                type: document.getElementById('venueType').value,
+                location: `${document.getElementById('venueCity').value}, ${document.getElementById('venueState').value}`,
+                capacity: parseInt(document.getElementById('venueCapacity').value),
+                events: 0,
+                status: 'active'
+            };
+            
+            venues.push(newVenue);
+            loadVenuesTable();
+            closeModal('venueModal');
+            this.reset();
+        });
+
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newUser = {
+                id: users.length + 1,
+                name: `${document.getElementById('userFirstName').value} ${document.getElementById('userLastName').value}`,
+                email: document.getElementById('userEmail').value,
+                phone: document.getElementById('userPhone').value,
+                role: document.getElementById('userRole').value,
+                lastLogin: new Date().toISOString().split('T')[0],
+                status: 'active'
+            };
+            
+            users.push(newUser);
+            loadUsersTable();
+            closeModal('userModal');
+            this.reset();
+        });
+
+        // Navigation event listeners
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const section = this.getAttribute('data-section');
+                showSection(section);
+            });
+        });
+
+        // Mobile menu toggle
+        document.getElementById('menuToggle').addEventListener('click', function() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('mainContent').classList.toggle('expanded');
+        });
+
+        // Close modal when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        });
+
+        // Verificar se usuário está logado
+function checkAuth() {
+    const token = localStorage.getItem('token');
+    const user = localStorage.getItem('user');
+    
+    if (!token || !user) {
+        // alert('Você precisa fazer login para acessar esta página');
+        window.location.href = '/start';
+        return false;
+    }
+    
+    // Atualizar informações do usuário no header
+    try {
+        const userData = JSON.parse(user);
+        document.getElementById('userName').textContent = userData.first_name || 'Admin';
+        document.querySelector('.user-avatar').textContent = (userData.first_name || 'A').charAt(0).toUpperCase();
+    } catch (error) {
+        console.error('Erro ao carregar dados do usuário:', error);
+    }
+    
+    return true;
+}
+
+// Executar verificação ao carregar a página
+document.addEventListener('DOMContentLoaded', function() {
+    // if (!checkAuth()) return;
+    
+    // Resto da inicialização...
+    initializeCharts();
+    loadEventsTable();
+    loadVenuesTable();
+    loadBookingsTable();
+    loadUsersTable();
+});
+    </script>
+</body>
+</html>
