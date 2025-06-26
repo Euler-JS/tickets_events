@@ -47,7 +47,8 @@ app.use(
     scriptSrc: [
       "'self'",
       "'unsafe-inline'",
-      "https://unpkg.com"
+      "https://unpkg.com",
+      "https://cdnjs.cloudflare.com" // ✅ ADICIONE ISSO AQUI
     ],
     scriptSrcAttr: ["'unsafe-inline'"],
     styleSrc: [
@@ -67,6 +68,7 @@ app.use(
     connectSrc: ["'self'", "https://unpkg.com"],
   }
 })
+
 );
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
