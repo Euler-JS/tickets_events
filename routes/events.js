@@ -91,9 +91,9 @@ router.get('/', authenticate, asyncHandler(async (req, res) => {
   
   // CORREÇÃO: Fazer filtro de eventos futuros opcional
   // Apenas se não houver filtros de data específicos
-  // if (!start_date && !end_date) {
-  //   query = query.gte('start_date_time', new Date().toISOString());
-  // }
+  if (!start_date && !end_date) {
+    query = query.gte('start_date_time', new Date().toISOString());
+  }
   
   // CORREÇÃO: Validar campo de ordenação
   const validSortFields = ['start_date_time', 'title', 'created_at', 'updated_at'];

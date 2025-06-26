@@ -35,9 +35,12 @@ const limiter = rateLimit({
 
 // Middleware global
 app.use(helmet());
+// CORS
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
+  origin: true, // Aceita qualquer origem
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 // Middlewares de segurança
 app.use(
@@ -132,7 +135,8 @@ app.use('/api/auth', authRoutes);
 // Rotas protegidas
 app.use('/api/venues', authenticate, venueRoutes);
 app.use('/api/events', authenticate, eventRoutes);
-app.use('/api/bookings', authenticate, bookingRoutes);
+// app.use('/api/bookings', authenticate, bookingRoutes);
+app.use('/api/bookings',bookingRoutes);
 app.use('/api/users', authenticate, userRoutes);
 
 // Middleware para rotas não encontradas

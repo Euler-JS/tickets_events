@@ -2,6 +2,7 @@ const express = require('express');
 const { supabase } = require('../config/supabase');
 const { asyncHandler, AppError } = require('../middleware/errorHandler');
 const { authorize } = require('../middleware/auth');
+const BookingNumberGenerator = require('../utils/bookingNumberGenerator');
 
 const router = express.Router();
 
@@ -152,7 +153,8 @@ router.post('/', asyncHandler(async (req, res) => {
     event_id,
     quantity,
     seat_numbers = [],
-    customer_notes
+    customer_notes,
+    user_id
   } = req.body;
 
   // Validações básicas
@@ -198,7 +200,7 @@ router.post('/', asyncHandler(async (req, res) => {
   const { data: existingBookings } = await supabase
     .from('bookings')
     .select('quantity')
-    .eq('user_id', req.user.id)
+    .eq('user_id', user_id)
     .eq('event_id', event_id)
     .in('status', ['pending', 'confirmed'])
     .is('deleted_at', null);
@@ -246,17 +248,27 @@ router.post('/', asyncHandler(async (req, res) => {
   const totalAmount = quantity * parseFloat(event.price);
 
   // Usar função SQL para gerar booking number único
-  const { data: bookingNumberResult, error: bookingNumberError } = await supabase
-    .rpc('generate_booking_number');
+  // const { data: bookingNumberResult, error: bookingNumberError } = await supabase
+  //   .rpc('generate_booking_number');
 
-  if (bookingNumberError) {
-    throw new AppError('Erro ao gerar número da reserva', 500, 'BOOKING_NUMBER_ERROR');
-  }
+  // if (bookingNumberError) {
+  //   throw new AppError('Erro ao gerar número da reserva', 500, 'BOOKING_NUMBER_ERROR');
+  // }
+
+  let bookingNumber;
+    try {
+      bookingNumber = await BookingNumberGenerator.generateBookingNumber();
+    } catch (error) {
+      console.error('Erro ao gerar booking number:', error);
+      // Fallback para timestamp
+      bookingNumber = BookingNumberGenerator.generateTimestampBookingNumber();
+    }
+
 
   // Criar reserva
   const bookingData = {
-    booking_number: bookingNumberResult,
-    user_id: req.user.id,
+    booking_number: bookingNumber,
+    user_id: user_id,
     event_id,
     quantity,
     total_amount: totalAmount,
