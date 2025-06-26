@@ -993,6 +993,16 @@
                     </button>
                 </div>
 
+                <!-- Adicionar depois do section-header na seção de usuários -->
+<div class="quick-actions">
+    <button class="quick-action active" onclick="filterUsers('all')">Todos</button>
+    <button class="quick-action" onclick="filterUsers('customer')">Clientes</button>
+    <button class="quick-action" onclick="filterUsers('venue_manager')">Gerentes</button>
+    <button class="quick-action" onclick="filterUsers('admin')">Admins</button>
+    <button class="quick-action" onclick="filterUsers('active')">Ativos</button>
+    <button class="quick-action" onclick="filterUsers('inactive')">Inativos</button>
+</div>
+
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -1200,6 +1210,14 @@
                     <label class="form-label">Telefone</label>
                     <input type="tel" class="form-input" id="userPhone">
                 </div>
+                <!-- Adicionar este campo no modal de usuário, antes dos botões -->
+<div class="form-group">
+    <label class="form-label">Status</label>
+    <select class="form-select" id="userIsActive">
+        <option value="true">Ativo</option>
+        <option value="false">Inativo</option>
+    </select>
+</div>
                 <div class="form-group">
                     <label class="form-label">Função</label>
                     <select class="form-select" id="userRole">
@@ -1253,39 +1271,6 @@
         //         status: "draft"
         //     }
         // ];
-
-       
-        
-
-        let users = [
-            {
-                id: 1,
-                name: "Maria Silva",
-                email: "maria@email.com",
-                phone: "+55 11 99999-9999",
-                role: "customer",
-                lastLogin: "2023-11-25",
-                status: "active"
-            },
-            {
-                id: 2,
-                name: "Admin Sistema",
-                email: "admin@ticketing.com",
-                phone: "+55 11 88888-8888",
-                role: "admin",
-                lastLogin: "2023-11-25",
-                status: "active"
-            },
-            {
-                id: 3,
-                name: "Carlos Venue",
-                email: "carlos@venue.com",
-                phone: "+55 11 77777-7777",
-                role: "venue_manager",
-                lastLogin: "2023-11-24",
-                status: "active"
-            }
-        ];
 
         // Navigation
         function showSection(sectionName) {
@@ -1569,27 +1554,76 @@ function getBookingStatusLabel(status) {
     return labels[status] || status;
 }
         // Load Users Table
-        function loadUsersTable() {
-            const tbody = document.getElementById('usersTable');
-            tbody.innerHTML = users.map(user => `
-                <tr>
-                    <td>${user.name}</td>
-                    <td>${user.email}</td>
-                    <td>${user.phone}</td>
-                    <td>${getRoleLabel(user.role)}</td>
-                    <td>${formatDate(user.lastLogin)}</td>
-                    <td><span class="status-badge status-${user.status === 'active' ? 'published' : 'cancelled'}">${user.status === 'active' ? 'Ativo' : 'Inativo'}</span></td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn btn-sm btn-secondary" onclick="editUser(${user.id})">Editar</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteUser(${user.id})">Excluir</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+     // Load Users Table
+async function loadUsersTable(filter = {}) {
+    const tbody = document.getElementById('usersTable');
+    
+    try {
+        // Mostrar loading
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando usuários...</td></tr>';
+        
+        // Construir URL com filtros
+        let url = '/api/users';
+        const params = new URLSearchParams();
+        
+        // Adicionar filtros se fornecidos
+        if (filter.role) params.append('role', filter.role);
+        if (filter.is_active !== undefined) params.append('is_active', filter.is_active);
+        if (filter.search) params.append('search', filter.search);
+        
+        // Adicionar parâmetros de ordenação e paginação
+        params.append('sort_by', 'created_at');
+        params.append('sort_order', 'desc');
+        params.append('limit', '50');
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
         }
+        
+        // Fazer chamada para API
+        const response = await fetch(url, {
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar usuários');
+        }
+        
+        const users = data.users || [];
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum usuário encontrado</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = users.map(user => `
+            <tr>
+                <td>${user.first_name} ${user.last_name}</td>
+                <td>${user.email}</td>
+                <td>${user.phone || 'N/A'}</td>
+                <td>${getRoleLabel(user.role)}</td>
+                <td>${user.last_login_at ? formatDate(user.last_login_at) : 'Nunca'}</td>
+                <td><span class="status-badge status-${user.is_active ? 'published' : 'cancelled'}">${user.is_active ? 'Ativo' : 'Inativo'}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        <button class="btn btn-sm btn-secondary" onclick="editUser('${user.id}')">Editar</button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteUser('${user.id}')">Excluir</button>
+                    </div>
+                </td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Erro ao carregar usuários:', error);
+        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444;">Erro ao carregar usuários: ${error.message}</td></tr>`;
+    }
+}
 
-        // Filter functions
+       
+
+// Filter functions
         function filterEvents(status) {
             document.querySelectorAll('.quick-action').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -1601,6 +1635,24 @@ function getBookingStatusLabel(status) {
             event.target.classList.add('active');
             loadBookingsTable(status);
         }
+
+        // Filter function for users
+function filterUsers(filter) {
+    document.querySelectorAll('#users-section .quick-action').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const filterParams = {};
+    
+    if (filter === 'customer' || filter === 'venue_manager' || filter === 'admin') {
+        filterParams.role = filter;
+    } else if (filter === 'active') {
+        filterParams.is_active = true;
+    } else if (filter === 'inactive') {
+        filterParams.is_active = false;
+    }
+    
+    loadUsersTable(filterParams);
+}
 
         // Modal functions
         function openEventModal() {
@@ -1829,25 +1881,105 @@ function getBookingStatusLabel(status) {
             }
         }
 
-        function editUser(id) {
-            const user = users.find(u => u.id === id);
-            if (user) {
-                const [firstName, ...lastNameParts] = user.name.split(' ');
-                document.getElementById('userFirstName').value = firstName;
-                document.getElementById('userLastName').value = lastNameParts.join(' ');
-                document.getElementById('userEmail').value = user.email;
-                document.getElementById('userPhone').value = user.phone;
-                document.getElementById('userRole').value = user.role;
-                openUserModal();
-            }
-        }
+        async function editUser(id) {
+    console.log(`Editando usuário com ID: ${id}`);
+    try {
+        // Fazer chamada para API para buscar dados do usuário
+        const response = await fetch(`/api/users/${id}`, {
+            credentials: 'include'
+        });
 
-        function deleteUser(id) {
-            if (confirm('Tem certeza que deseja excluir este usuário?')) {
-                users = users.filter(u => u.id !== id);
-                loadUsersTable();
-            }
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao carregar usuário');
         }
+        
+        const user = data.user;
+        
+        // Preencher o formulário com os dados do usuário
+        document.getElementById('userFirstName').value = user.first_name || '';
+        document.getElementById('userLastName').value = user.last_name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userPhone').value = user.phone || '';
+        document.getElementById('userRole').value = user.role || 'customer';
+        
+        // Se houver campo de status ativo/inativo, preencher também
+        if (document.getElementById('userIsActive')) {
+            document.getElementById('userIsActive').checked = user.is_active;
+        }
+        
+        // Marcar que estamos editando (não criando)
+        document.getElementById('userForm').dataset.editId = id;
+        document.querySelector('#userModal .modal-title').textContent = 'Editar Usuário';
+        document.querySelector('#userForm button[type="submit"]').textContent = 'Atualizar Usuário';
+        
+        // Abrir modal
+        openUserModal();
+        
+    } catch (error) {
+        console.error('Erro ao carregar usuário:', error);
+        showNotification('Erro ao carregar dados do usuário: ' + error.message, 'error');
+    }
+}
+
+        async function deleteUser(id) {
+    // Confirmação com o usuário
+    if (!confirm('Tem certeza que deseja excluir este usuário?\n\nEsta ação não pode ser desfeita.')) {
+        return;
+    }
+    
+    try {
+        // Mostrar loading no botão específico
+        const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
+        if (deleteButton) {
+            deleteButton.disabled = true;
+            deleteButton.textContent = 'Excluindo...';
+        }
+        
+        // Fazer chamada para API
+        const response = await fetch(`/api/users/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro ao excluir usuário');
+        }
+        
+        // Sucesso
+        showNotification('Usuário excluído com sucesso!', 'success');
+        
+        // Recarregar tabela de usuários
+        await loadUsersTable();
+        
+    } catch (error) {
+        console.error('Erro ao deletar usuário:', error);
+        
+        // Tratar erros específicos da API
+        let errorMessage = error.message;
+        
+        if (error.message.includes('reservas ativas')) {
+            errorMessage = 'Não é possível excluir este usuário pois há reservas ativas.';
+        } else if (error.message.includes('própria conta')) {
+            errorMessage = 'Não é possível excluir sua própria conta.';
+        } else if (error.message.includes('não encontrado')) {
+            errorMessage = 'Usuário não encontrado.';
+        }
+        
+        showNotification(errorMessage, 'error');
+        
+    } finally {
+        // Reabilitar botão
+        const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
+        if (deleteButton) {
+            deleteButton.disabled = false;
+            deleteButton.textContent = 'Excluir';
+        }
+    }
+}
 
         async function confirmBooking(id) {
     if (!confirm('Tem certeza que deseja confirmar esta reserva?')) {
@@ -2259,24 +2391,85 @@ async function loadRecentBookings() {
                 submitButton.textContent = originalText;
             }
         });
-        document.getElementById('userForm').addEventListener('submit', function (e) {
-            e.preventDefault();
-
-            const newUser = {
-                id: users.length + 1,
-                name: `${document.getElementById('userFirstName').value} ${document.getElementById('userLastName').value}`,
-                email: document.getElementById('userEmail').value,
-                phone: document.getElementById('userPhone').value,
-                role: document.getElementById('userRole').value,
-                lastLogin: new Date().toISOString().split('T')[0],
-                status: 'active'
-            };
-
-            users.push(newUser);
-            loadUsersTable();
-            closeModal('userModal');
-            this.reset();
+     
+        document.getElementById('userForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    // Desabilitar botão de submit para evitar duplo clique
+    const submitButton = this.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Salvando...';
+    
+    try {
+        // Verificar se é edição ou criação
+        const editId = this.dataset.editId;
+        const isEditing = !!editId;
+        
+        // Coletar dados do formulário
+        const userData = {
+            firstName: document.getElementById('userFirstName').value,
+            lastName: document.getElementById('userLastName').value,
+            email: document.getElementById('userEmail').value,
+            phone: document.getElementById('userPhone').value,
+            role: document.getElementById('userRole').value,
+            isActive: document.getElementById('userIsActive') ? 
+                document.getElementById('userIsActive').value === 'true' : true
+        };
+        
+        // Validações básicas no frontend
+        if (!userData.firstName || !userData.lastName || !userData.email) {
+            throw new Error('Nome, sobrenome e email são obrigatórios');
+        }
+        
+        if (!userData.email.includes('@')) {
+            throw new Error('Email deve ser válido');
+        }
+        
+        // Definir URL e método baseado na operação
+        const url = isEditing ? `/api/users/${editId}` : '/api/users';
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        // Fazer chamada para API
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(userData)
         });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.message || `Erro ao ${isEditing ? 'atualizar' : 'criar'} usuário`);
+        }
+        
+        // Sucesso
+        showNotification(data.message || `Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+        
+        // Limpar o dataset de edição
+        delete this.dataset.editId;
+        
+        // Resetar formulário
+        this.reset();
+        
+        // Fechar modal
+        closeModal('userModal');
+        
+        // Recarregar lista de usuários
+        loadUsersTable();
+        
+    } catch (error) {
+        console.error('Erro ao salvar usuário:', error);
+        showNotification('Erro ao salvar usuário: ' + error.message, 'error');
+    } finally {
+        // Restaurar botão
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    }
+});
 
         // Navigation event listeners
         document.querySelectorAll('.nav-item').forEach(item => {
