@@ -781,7 +781,7 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-value" id="totalRevenue">R$ 89.450</div>
+                                <div class="stat-value" id="totalRevenue">MZN 89.450</div>
                                 <div class="stat-label">Receita Total</div>
                                 <div class="stat-change positive">
                                     <span>↗</span> +15% este mês
@@ -850,7 +850,7 @@
                                 <td>Show do Coldplay</td>
                                 <td>Maria Silva</td>
                                 <td>2</td>
-                                <td>R$ 540,00</td>
+                                <td>MZN 540,00</td>
                                 <td><span class="status-badge status-confirmed">Confirmado</span></td>
                                 <td>25/11/2023</td>
                             </tr>
@@ -859,7 +859,7 @@
                                 <td>Peça: Hamlet</td>
                                 <td>João Santos</td>
                                 <td>4</td>
-                                <td>R$ 320,00</td>
+                                <td>MZN 320,00</td>
                                 <td><span class="status-badge status-pending">Pendente</span></td>
                                 <td>25/11/2023</td>
                             </tr>
@@ -868,7 +868,7 @@
                                 <td>Filme: Avatar 3</td>
                                 <td>Ana Costa</td>
                                 <td>3</td>
-                                <td>R$ 75,00</td>
+                                <td>MZN 75,00</td>
                                 <td><span class="status-badge status-confirmed">Confirmado</span></td>
                                 <td>24/11/2023</td>
                             </tr>
@@ -994,14 +994,14 @@
                 </div>
 
                 <!-- Adicionar depois do section-header na seção de usuários -->
-<div class="quick-actions">
-    <button class="quick-action active" onclick="filterUsers('all')">Todos</button>
-    <button class="quick-action" onclick="filterUsers('customer')">Clientes</button>
-    <button class="quick-action" onclick="filterUsers('venue_manager')">Gerentes</button>
-    <button class="quick-action" onclick="filterUsers('admin')">Admins</button>
-    <button class="quick-action" onclick="filterUsers('active')">Ativos</button>
-    <button class="quick-action" onclick="filterUsers('inactive')">Inativos</button>
-</div>
+                <div class="quick-actions">
+                    <button class="quick-action active" onclick="filterUsers('all')">Todos</button>
+                    <button class="quick-action" onclick="filterUsers('customer')">Clientes</button>
+                    <button class="quick-action" onclick="filterUsers('venue_manager')">Gerentes</button>
+                    <button class="quick-action" onclick="filterUsers('admin')">Admins</button>
+                    <button class="quick-action" onclick="filterUsers('active')">Ativos</button>
+                    <button class="quick-action" onclick="filterUsers('inactive')">Inativos</button>
+                </div>
 
                 <table class="data-table">
                     <thead>
@@ -1041,7 +1041,7 @@
                     <div class="stat-card">
                         <div class="stat-header">
                             <div>
-                                <div class="stat-value">R$ 45.200</div>
+                                <div class="stat-value">MZN 45.200</div>
                                 <div class="stat-label">Receita Semanal</div>
                             </div>
                             <div class="stat-icon green">💰</div>
@@ -1087,6 +1087,18 @@
                     <textarea class="form-textarea" id="eventDescription"></textarea>
                 </div>
                 <div class="form-group">
+                    <label class="form-label">Poster do Evento</label>
+                    <input type="file" class="form-input" id="eventPoster" accept="image/*">
+                    <div id="posterPreview" style="margin-top: 10px; display: none;">
+                        <img id="posterImage" style="max-width: 200px; max-height: 200px; border-radius: 8px;" />
+                        <button type="button" id="removePoster"
+                            style="margin-left: 10px; padding: 5px 10px; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">Remover</button>
+                    </div>
+                    <input type="hidden" id="eventPosterUrl" />
+                    <small style="color: #666; font-size: 12px;">Formatos aceitos: JPG, PNG, GIF. Tamanho máximo:
+                        5MB</small>
+                </div>
+                <div class="form-group">
                     <label class="form-label">Tipo</label>
                     <select class="form-select" id="eventType">
                         <option value="movie">Filme</option>
@@ -1112,7 +1124,7 @@
                     <input type="datetime-local" class="form-input" id="eventEndDate" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Preço (R$)</label>
+                    <label class="form-label">Preço (MZN)</label>
                     <input type="number" class="form-input" id="eventPrice" step="0.01" min="0" required>
                 </div>
                 <div class="form-group">
@@ -1211,13 +1223,13 @@
                     <input type="tel" class="form-input" id="userPhone">
                 </div>
                 <!-- Adicionar este campo no modal de usuário, antes dos botões -->
-<div class="form-group">
-    <label class="form-label">Status</label>
-    <select class="form-select" id="userIsActive">
-        <option value="true">Ativo</option>
-        <option value="false">Inativo</option>
-    </select>
-</div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="userIsActive">
+                        <option value="true">Ativo</option>
+                        <option value="false">Inativo</option>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label class="form-label">Função</label>
                     <select class="form-select" id="userRole">
@@ -1360,10 +1372,16 @@
                 tbody.innerHTML = events.map(event => `
             <tr>
                 <td>${event.title}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        ${event.poster_url ? `<img src="${event.poster_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />` : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px;">📷</div>'}
+                        <span>${event.title}</span>
+                    </div>
+                </td>
                 <td>${getEventTypeLabel(event.type)}</td>
                 <td>${event.venues ? event.venues.name : 'N/A'}</td>
                 <td>${formatDateTime(event.start_date_time)}</td>
-                <td>R$ ${parseFloat(event.price).toFixed(2)}</td>
+                <td>MZN ${parseFloat(event.price).toFixed(2)}</td>
                 <td>${event.available_tickets}</td>
                 <td><span class="status-badge status-${event.status}">${getStatusLabel(event.status)}</span></td>
                 <td>
@@ -1543,62 +1561,62 @@
             }
         }
 
-function getBookingStatusLabel(status) {
-    const labels = {
-        pending: 'Pendente',
-        confirmed: 'Confirmado',
-        cancelled: 'Cancelado',
-        completed: 'Concluído',
-        refunded: 'Reembolsado'
-    };
-    return labels[status] || status;
-}
+        function getBookingStatusLabel(status) {
+            const labels = {
+                pending: 'Pendente',
+                confirmed: 'Confirmado',
+                cancelled: 'Cancelado',
+                completed: 'Concluído',
+                refunded: 'Reembolsado'
+            };
+            return labels[status] || status;
+        }
         // Load Users Table
-     // Load Users Table
-async function loadUsersTable(filter = {}) {
-    const tbody = document.getElementById('usersTable');
-    
-    try {
-        // Mostrar loading
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando usuários...</td></tr>';
-        
-        // Construir URL com filtros
-        let url = '/api/users';
-        const params = new URLSearchParams();
-        
-        // Adicionar filtros se fornecidos
-        if (filter.role) params.append('role', filter.role);
-        if (filter.is_active !== undefined) params.append('is_active', filter.is_active);
-        if (filter.search) params.append('search', filter.search);
-        
-        // Adicionar parâmetros de ordenação e paginação
-        params.append('sort_by', 'created_at');
-        params.append('sort_order', 'desc');
-        params.append('limit', '50');
-        
-        if (params.toString()) {
-            url += '?' + params.toString();
-        }
-        
-        // Fazer chamada para API
-        const response = await fetch(url, {
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao carregar usuários');
-        }
-        
-        const users = data.users || [];
-        
-        if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum usuário encontrado</td></tr>';
-            return;
-        }
-        
-        tbody.innerHTML = users.map(user => `
+        // Load Users Table
+        async function loadUsersTable(filter = {}) {
+            const tbody = document.getElementById('usersTable');
+
+            try {
+                // Mostrar loading
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando usuários...</td></tr>';
+
+                // Construir URL com filtros
+                let url = '/api/users';
+                const params = new URLSearchParams();
+
+                // Adicionar filtros se fornecidos
+                if (filter.role) params.append('role', filter.role);
+                if (filter.is_active !== undefined) params.append('is_active', filter.is_active);
+                if (filter.search) params.append('search', filter.search);
+
+                // Adicionar parâmetros de ordenação e paginação
+                params.append('sort_by', 'created_at');
+                params.append('sort_order', 'desc');
+                params.append('limit', '50');
+
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+
+                // Fazer chamada para API
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao carregar usuários');
+                }
+
+                const users = data.users || [];
+
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="empty-state">Nenhum usuário encontrado</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = users.map(user => `
             <tr>
                 <td>${user.first_name} ${user.last_name}</td>
                 <td>${user.email}</td>
@@ -1614,16 +1632,16 @@ async function loadUsersTable(filter = {}) {
                 </td>
             </tr>
         `).join('');
-        
-    } catch (error) {
-        console.error('Erro ao carregar usuários:', error);
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444;">Erro ao carregar usuários: ${error.message}</td></tr>`;
-    }
-}
 
-       
+            } catch (error) {
+                console.error('Erro ao carregar usuários:', error);
+                tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #ef4444;">Erro ao carregar usuários: ${error.message}</td></tr>`;
+            }
+        }
 
-// Filter functions
+
+
+        // Filter functions
         function filterEvents(status) {
             document.querySelectorAll('.quick-action').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -1637,22 +1655,22 @@ async function loadUsersTable(filter = {}) {
         }
 
         // Filter function for users
-function filterUsers(filter) {
-    document.querySelectorAll('#users-section .quick-action').forEach(btn => btn.classList.remove('active'));
-    event.target.classList.add('active');
-    
-    const filterParams = {};
-    
-    if (filter === 'customer' || filter === 'venue_manager' || filter === 'admin') {
-        filterParams.role = filter;
-    } else if (filter === 'active') {
-        filterParams.is_active = true;
-    } else if (filter === 'inactive') {
-        filterParams.is_active = false;
-    }
-    
-    loadUsersTable(filterParams);
-}
+        function filterUsers(filter) {
+            document.querySelectorAll('#users-section .quick-action').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const filterParams = {};
+
+            if (filter === 'customer' || filter === 'venue_manager' || filter === 'admin') {
+                filterParams.role = filter;
+            } else if (filter === 'active') {
+                filterParams.is_active = true;
+            } else if (filter === 'inactive') {
+                filterParams.is_active = false;
+            }
+
+            loadUsersTable(filterParams);
+        }
 
         // Modal functions
         function openEventModal() {
@@ -1741,6 +1759,16 @@ function filterUsers(filter) {
                 document.getElementById('eventForm').dataset.editId = id;
                 document.querySelector('#eventModal .modal-title').textContent = 'Editar Evento';
                 document.querySelector('#eventForm button[type="submit"]').textContent = 'Atualizar Evento';
+
+                if (event.poster_url) {
+        document.getElementById('eventPosterUrl').value = event.poster_url;
+        document.getElementById('posterImage').src = event.poster_url;
+        document.getElementById('posterPreview').style.display = 'block';
+    } else {
+        document.getElementById('posterPreview').style.display = 'none';
+        document.getElementById('posterImage').src = '';
+        document.getElementById('eventPosterUrl').value = '';
+    }
 
                 // Abrir modal
                 openEventModal();
@@ -1882,223 +1910,223 @@ function filterUsers(filter) {
         }
 
         async function editUser(id) {
-    console.log(`Editando usuário com ID: ${id}`);
-    try {
-        // Fazer chamada para API para buscar dados do usuário
-        const response = await fetch(`/api/users/${id}`, {
-            credentials: 'include'
-        });
+            console.log(`Editando usuário com ID: ${id}`);
+            try {
+                // Fazer chamada para API para buscar dados do usuário
+                const response = await fetch(`/api/users/${id}`, {
+                    credentials: 'include'
+                });
 
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao carregar usuário');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao carregar usuário');
+                }
+
+                const user = data.user;
+
+                // Preencher o formulário com os dados do usuário
+                document.getElementById('userFirstName').value = user.first_name || '';
+                document.getElementById('userLastName').value = user.last_name || '';
+                document.getElementById('userEmail').value = user.email || '';
+                document.getElementById('userPhone').value = user.phone || '';
+                document.getElementById('userRole').value = user.role || 'customer';
+
+                // Se houver campo de status ativo/inativo, preencher também
+                if (document.getElementById('userIsActive')) {
+                    document.getElementById('userIsActive').checked = user.is_active;
+                }
+
+                // Marcar que estamos editando (não criando)
+                document.getElementById('userForm').dataset.editId = id;
+                document.querySelector('#userModal .modal-title').textContent = 'Editar Usuário';
+                document.querySelector('#userForm button[type="submit"]').textContent = 'Atualizar Usuário';
+
+                // Abrir modal
+                openUserModal();
+
+            } catch (error) {
+                console.error('Erro ao carregar usuário:', error);
+                showNotification('Erro ao carregar dados do usuário: ' + error.message, 'error');
+            }
         }
-        
-        const user = data.user;
-        
-        // Preencher o formulário com os dados do usuário
-        document.getElementById('userFirstName').value = user.first_name || '';
-        document.getElementById('userLastName').value = user.last_name || '';
-        document.getElementById('userEmail').value = user.email || '';
-        document.getElementById('userPhone').value = user.phone || '';
-        document.getElementById('userRole').value = user.role || 'customer';
-        
-        // Se houver campo de status ativo/inativo, preencher também
-        if (document.getElementById('userIsActive')) {
-            document.getElementById('userIsActive').checked = user.is_active;
-        }
-        
-        // Marcar que estamos editando (não criando)
-        document.getElementById('userForm').dataset.editId = id;
-        document.querySelector('#userModal .modal-title').textContent = 'Editar Usuário';
-        document.querySelector('#userForm button[type="submit"]').textContent = 'Atualizar Usuário';
-        
-        // Abrir modal
-        openUserModal();
-        
-    } catch (error) {
-        console.error('Erro ao carregar usuário:', error);
-        showNotification('Erro ao carregar dados do usuário: ' + error.message, 'error');
-    }
-}
 
         async function deleteUser(id) {
-    // Confirmação com o usuário
-    if (!confirm('Tem certeza que deseja excluir este usuário?\n\nEsta ação não pode ser desfeita.')) {
-        return;
-    }
-    
-    try {
-        // Mostrar loading no botão específico
-        const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
-        if (deleteButton) {
-            deleteButton.disabled = true;
-            deleteButton.textContent = 'Excluindo...';
+            // Confirmação com o usuário
+            if (!confirm('Tem certeza que deseja excluir este usuário?\n\nEsta ação não pode ser desfeita.')) {
+                return;
+            }
+
+            try {
+                // Mostrar loading no botão específico
+                const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
+                if (deleteButton) {
+                    deleteButton.disabled = true;
+                    deleteButton.textContent = 'Excluindo...';
+                }
+
+                // Fazer chamada para API
+                const response = await fetch(`/api/users/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao excluir usuário');
+                }
+
+                // Sucesso
+                showNotification('Usuário excluído com sucesso!', 'success');
+
+                // Recarregar tabela de usuários
+                await loadUsersTable();
+
+            } catch (error) {
+                console.error('Erro ao deletar usuário:', error);
+
+                // Tratar erros específicos da API
+                let errorMessage = error.message;
+
+                if (error.message.includes('reservas ativas')) {
+                    errorMessage = 'Não é possível excluir este usuário pois há reservas ativas.';
+                } else if (error.message.includes('própria conta')) {
+                    errorMessage = 'Não é possível excluir sua própria conta.';
+                } else if (error.message.includes('não encontrado')) {
+                    errorMessage = 'Usuário não encontrado.';
+                }
+
+                showNotification(errorMessage, 'error');
+
+            } finally {
+                // Reabilitar botão
+                const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
+                if (deleteButton) {
+                    deleteButton.disabled = false;
+                    deleteButton.textContent = 'Excluir';
+                }
+            }
         }
-        
-        // Fazer chamada para API
-        const response = await fetch(`/api/users/${id}`, {
-            method: 'DELETE',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao excluir usuário');
-        }
-        
-        // Sucesso
-        showNotification('Usuário excluído com sucesso!', 'success');
-        
-        // Recarregar tabela de usuários
-        await loadUsersTable();
-        
-    } catch (error) {
-        console.error('Erro ao deletar usuário:', error);
-        
-        // Tratar erros específicos da API
-        let errorMessage = error.message;
-        
-        if (error.message.includes('reservas ativas')) {
-            errorMessage = 'Não é possível excluir este usuário pois há reservas ativas.';
-        } else if (error.message.includes('própria conta')) {
-            errorMessage = 'Não é possível excluir sua própria conta.';
-        } else if (error.message.includes('não encontrado')) {
-            errorMessage = 'Usuário não encontrado.';
-        }
-        
-        showNotification(errorMessage, 'error');
-        
-    } finally {
-        // Reabilitar botão
-        const deleteButton = document.querySelector(`button[onclick="deleteUser('${id}')"]`);
-        if (deleteButton) {
-            deleteButton.disabled = false;
-            deleteButton.textContent = 'Excluir';
-        }
-    }
-}
 
         async function confirmBooking(id) {
-    if (!confirm('Tem certeza que deseja confirmar esta reserva?')) {
-        return;
-    }
-    
-    try {
-        // Mostrar loading no botão específico
-        const confirmButton = document.querySelector(`button[onclick="confirmBooking('${id}')"]`);
-        if (confirmButton) {
-            confirmButton.disabled = true;
-            confirmButton.textContent = 'Confirmando...';
+            if (!confirm('Tem certeza que deseja confirmar esta reserva?')) {
+                return;
+            }
+
+            try {
+                // Mostrar loading no botão específico
+                const confirmButton = document.querySelector(`button[onclick="confirmBooking('${id}')"]`);
+                if (confirmButton) {
+                    confirmButton.disabled = true;
+                    confirmButton.textContent = 'Confirmando...';
+                }
+
+                // Fazer chamada para API
+                const response = await fetch(`/api/bookings/${id}/confirm`, {
+                    method: 'PUT',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao confirmar reserva');
+                }
+
+                // Sucesso
+                showNotification('Reserva confirmada com sucesso!', 'success');
+
+                // Recarregar tabela de bookings
+                await loadBookingsTable();
+
+            } catch (error) {
+                console.error('Erro ao confirmar reserva:', error);
+                showNotification('Erro ao confirmar reserva: ' + error.message, 'error');
+
+            } finally {
+                // Reabilitar botão se ainda existir
+                const confirmButton = document.querySelector(`button[onclick="confirmBooking('${id}')"]`);
+                if (confirmButton) {
+                    confirmButton.disabled = false;
+                    confirmButton.textContent = 'Confirmar';
+                }
+            }
         }
-        
-        // Fazer chamada para API
-        const response = await fetch(`/api/bookings/${id}/confirm`, {
-            method: 'PUT',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao confirmar reserva');
-        }
-        
-        // Sucesso
-        showNotification('Reserva confirmada com sucesso!', 'success');
-        
-        // Recarregar tabela de bookings
-        await loadBookingsTable();
-        
-    } catch (error) {
-        console.error('Erro ao confirmar reserva:', error);
-        showNotification('Erro ao confirmar reserva: ' + error.message, 'error');
-        
-    } finally {
-        // Reabilitar botão se ainda existir
-        const confirmButton = document.querySelector(`button[onclick="confirmBooking('${id}')"]`);
-        if (confirmButton) {
-            confirmButton.disabled = false;
-            confirmButton.textContent = 'Confirmar';
-        }
-    }
-}
 
         async function cancelBooking(id) {
-    if (!confirm('Tem certeza que deseja cancelar esta reserva?')) {
-        return;
-    }
-    
-    try {
-        // Mostrar loading no botão específico
-        const cancelButton = document.querySelector(`button[onclick="cancelBooking('${id}')"]`);
-        if (cancelButton) {
-            cancelButton.disabled = true;
-            cancelButton.textContent = 'Cancelando...';
-        }
-        
-        // Fazer chamada para API
-        const response = await fetch(`/api/bookings/${id}/cancel`, {
-            method: 'PUT',
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro ao cancelar reserva');
-        }
-        
-        // Sucesso
-        showNotification('Reserva cancelada com sucesso!', 'success');
-        
-        // Recarregar tabela de bookings
-        await loadBookingsTable();
-        
-    } catch (error) {
-        console.error('Erro ao cancelar reserva:', error);
-        showNotification('Erro ao cancelar reserva: ' + error.message, 'error');
-        
-    } finally {
-        // Reabilitar botão se ainda existir
-        const cancelButton = document.querySelector(`button[onclick="cancelBooking('${id}')"]`);
-        if (cancelButton) {
-            cancelButton.disabled = false;
-            cancelButton.textContent = 'Cancelar';
-        }
-    }
-}
+            if (!confirm('Tem certeza que deseja cancelar esta reserva?')) {
+                return;
+            }
 
-// Adicionar esta função
-async function loadRecentBookings() {
-    const tbody = document.getElementById('recentBookingsTable');
-    
-    try {
-        const response = await fetch('/api/bookings?limit=5&sort_by=created_at&sort_order=desc', {
-            credentials: 'include'
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok && data.bookings && data.bookings.length > 0) {
-            tbody.innerHTML = data.bookings.map(booking => `
+            try {
+                // Mostrar loading no botão específico
+                const cancelButton = document.querySelector(`button[onclick="cancelBooking('${id}')"]`);
+                if (cancelButton) {
+                    cancelButton.disabled = true;
+                    cancelButton.textContent = 'Cancelando...';
+                }
+
+                // Fazer chamada para API
+                const response = await fetch(`/api/bookings/${id}/cancel`, {
+                    method: 'PUT',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro ao cancelar reserva');
+                }
+
+                // Sucesso
+                showNotification('Reserva cancelada com sucesso!', 'success');
+
+                // Recarregar tabela de bookings
+                await loadBookingsTable();
+
+            } catch (error) {
+                console.error('Erro ao cancelar reserva:', error);
+                showNotification('Erro ao cancelar reserva: ' + error.message, 'error');
+
+            } finally {
+                // Reabilitar botão se ainda existir
+                const cancelButton = document.querySelector(`button[onclick="cancelBooking('${id}')"]`);
+                if (cancelButton) {
+                    cancelButton.disabled = false;
+                    cancelButton.textContent = 'Cancelar';
+                }
+            }
+        }
+
+        // Adicionar esta função
+        async function loadRecentBookings() {
+            const tbody = document.getElementById('recentBookingsTable');
+
+            try {
+                const response = await fetch('/api/bookings?limit=5&sort_by=created_at&sort_order=desc', {
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.bookings && data.bookings.length > 0) {
+                    tbody.innerHTML = data.bookings.map(booking => `
                 <tr>
                     <td>${booking.booking_number || booking.id}</td>
                     <td>${booking.events ? booking.events.title : 'N/A'}</td>
                     <td>${booking.users ? `${booking.users.first_name} ${booking.users.last_name}` : 'N/A'}</td>
                     <td>${booking.quantity}</td>
-                    <td>R$ ${parseFloat(booking.total_amount).toFixed(2)}</td>
+                    <td>MZN ${parseFloat(booking.total_amount).toFixed(2)}</td>
                     <td><span class="status-badge status-${booking.status}">${getBookingStatusLabel(booking.status)}</span></td>
                     <td>${formatDate(booking.created_at)}</td>
                 </tr>
             `).join('');
+                }
+            } catch (error) {
+                console.error('Erro ao carregar últimas reservas:', error);
+            }
         }
-    } catch (error) {
-        console.error('Erro ao carregar últimas reservas:', error);
-    }
-}
 
         // Utility functions
         function getEventTypeLabel(type) {
@@ -2174,7 +2202,7 @@ async function loadRecentBookings() {
                 data: {
                     labels: ['1 Nov', '5 Nov', '10 Nov', '15 Nov', '20 Nov', '25 Nov', '30 Nov'],
                     datasets: [{
-                        label: 'Receita (R$)',
+                        label: 'Receita (MZN)',
                         data: [12000, 19000, 15000, 25000, 22000, 30000, 28000],
                         borderColor: '#667eea',
                         backgroundColor: 'rgba(102, 126, 234, 0.1)',
@@ -2195,7 +2223,7 @@ async function loadRecentBookings() {
                             beginAtZero: true,
                             ticks: {
                                 callback: function (value) {
-                                    return 'R$ ' + value.toLocaleString();
+                                    return 'MZN ' + value.toLocaleString();
                                 }
                             }
                         }
@@ -2240,69 +2268,89 @@ async function loadRecentBookings() {
         }
 
         // Form handlers
-        document.getElementById('eventForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
-
-            const submitBtn = this.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-
+       document.getElementById('eventForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const submitBtn = this.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    
+    try {
+        // Mostrar loading
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
+        
+        // Verificar se há imagem para upload
+        const posterFile = document.getElementById('eventPoster').files[0];
+        let posterUrl = document.getElementById('eventPosterUrl').value; // URL existente em caso de edição
+        
+        // Se há novo arquivo de imagem, fazer upload
+        if (posterFile) {
             try {
-                // Mostrar loading
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
-
-                const formData = {
-                    title: document.getElementById('eventTitle').value,
-                    description: document.getElementById('eventDescription').value,
-                    type: document.getElementById('eventType').value,
-                    venue_id: document.getElementById('eventVenue').value,
-                    start_date_time: document.getElementById('eventStartDate').value,
-                    end_date_time: document.getElementById('eventEndDate').value,
-                    price: parseFloat(document.getElementById('eventPrice').value),
-                    available_tickets: parseInt(document.getElementById('eventTickets').value),
-                    status: document.getElementById('eventStatus').value
-                };
-
-                console.log('Dados do evento:', formData);
-
-                // Verificar se é edição ou criação
-                const editId = this.dataset.editId;
-                const isEditing = !!editId;
-
-                const url = isEditing ? `/api/events/${editId}` : '/api/events';
-                const method = isEditing ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include', // Para enviar cookies
-                    body: JSON.stringify(formData)
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showNotification(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!', 'success')
-                    closeModal('eventModal');
-                    this.reset();
-                    delete this.dataset.editId;
-                    loadEventsTable(); // Recarregar tabela
-                } else {
-                    throw new Error(data.error || data.message || 'Erro ao salvar evento');
-                }
-
-            } catch (error) {
-                console.error('Erro ao salvar evento:', error);
-                showNotification('Erro ao salvar evento: ' + error.message, 'error')
-            } finally {
-                // Restaurar botão
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                submitBtn.innerHTML = '<div class="loading"></div> Fazendo upload da imagem...';
+                posterUrl = await uploadEventPoster(posterFile);
+            } catch (uploadError) {
+                throw new Error('Erro no upload da imagem: ' + uploadError.message);
             }
-        });
+        }
+        
+        const formData = {
+            title: document.getElementById('eventTitle').value,
+            description: document.getElementById('eventDescription').value,
+            type: document.getElementById('eventType').value,
+            venue_id: document.getElementById('eventVenue').value,
+            start_date_time: document.getElementById('eventStartDate').value,
+            end_date_time: document.getElementById('eventEndDate').value,
+            price: parseFloat(document.getElementById('eventPrice').value),
+            available_tickets: parseInt(document.getElementById('eventTickets').value),
+            status: document.getElementById('eventStatus').value,
+            poster_url: posterUrl // Incluir URL da imagem
+        };
 
+        console.log('Dados do evento:', formData);
+        
+        // Verificar se é edição ou criação
+        const editId = this.dataset.editId;
+        const isEditing = !!editId;
+        
+        const url = isEditing ? `/api/events/${editId}` : '/api/events';
+        const method = isEditing ? 'PUT' : 'POST';
+        
+        submitBtn.innerHTML = '<div class="loading"></div> Salvando evento...';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            showNotification(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!', 'success')
+            closeModal('eventModal');
+            this.reset();
+            // Limpar preview da imagem
+            document.getElementById('posterPreview').style.display = 'none';
+            document.getElementById('posterImage').src = '';
+            document.getElementById('eventPosterUrl').value = '';
+            delete this.dataset.editId;
+            loadEventsTable();
+        } else {
+            throw new Error(data.error || data.message || 'Erro ao salvar evento');
+        }
+        
+    } catch (error) {
+        console.error('Erro ao salvar evento:', error);
+        showNotification('Erro ao salvar evento: ' + error.message, 'error')
+    } finally {
+        // Restaurar botão
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+    }
+});
 
         document.getElementById('venueForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -2391,85 +2439,85 @@ async function loadRecentBookings() {
                 submitButton.textContent = originalText;
             }
         });
-     
-        document.getElementById('userForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Desabilitar botão de submit para evitar duplo clique
-    const submitButton = this.querySelector('button[type="submit"]');
-    const originalText = submitButton.textContent;
-    submitButton.disabled = true;
-    submitButton.textContent = 'Salvando...';
-    
-    try {
-        // Verificar se é edição ou criação
-        const editId = this.dataset.editId;
-        const isEditing = !!editId;
-        
-        // Coletar dados do formulário
-        const userData = {
-            firstName: document.getElementById('userFirstName').value,
-            lastName: document.getElementById('userLastName').value,
-            email: document.getElementById('userEmail').value,
-            phone: document.getElementById('userPhone').value,
-            role: document.getElementById('userRole').value,
-            isActive: document.getElementById('userIsActive') ? 
-                document.getElementById('userIsActive').value === 'true' : true
-        };
-        
-        // Validações básicas no frontend
-        if (!userData.firstName || !userData.lastName || !userData.email) {
-            throw new Error('Nome, sobrenome e email são obrigatórios');
-        }
-        
-        if (!userData.email.includes('@')) {
-            throw new Error('Email deve ser válido');
-        }
-        
-        // Definir URL e método baseado na operação
-        const url = isEditing ? `/api/users/${editId}` : '/api/users';
-        const method = isEditing ? 'PUT' : 'POST';
-        
-        // Fazer chamada para API
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(userData)
+
+        document.getElementById('userForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            // Desabilitar botão de submit para evitar duplo clique
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Salvando...';
+
+            try {
+                // Verificar se é edição ou criação
+                const editId = this.dataset.editId;
+                const isEditing = !!editId;
+
+                // Coletar dados do formulário
+                const userData = {
+                    firstName: document.getElementById('userFirstName').value,
+                    lastName: document.getElementById('userLastName').value,
+                    email: document.getElementById('userEmail').value,
+                    phone: document.getElementById('userPhone').value,
+                    role: document.getElementById('userRole').value,
+                    isActive: document.getElementById('userIsActive') ?
+                        document.getElementById('userIsActive').value === 'true' : true
+                };
+
+                // Validações básicas no frontend
+                if (!userData.firstName || !userData.lastName || !userData.email) {
+                    throw new Error('Nome, sobrenome e email são obrigatórios');
+                }
+
+                if (!userData.email.includes('@')) {
+                    throw new Error('Email deve ser válido');
+                }
+
+                // Definir URL e método baseado na operação
+                const url = isEditing ? `/api/users/${editId}` : '/api/users';
+                const method = isEditing ? 'PUT' : 'POST';
+
+                // Fazer chamada para API
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || `Erro ao ${isEditing ? 'atualizar' : 'criar'} usuário`);
+                }
+
+                // Sucesso
+                showNotification(data.message || `Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success');
+
+                // Limpar o dataset de edição
+                delete this.dataset.editId;
+
+                // Resetar formulário
+                this.reset();
+
+                // Fechar modal
+                closeModal('userModal');
+
+                // Recarregar lista de usuários
+                loadUsersTable();
+
+            } catch (error) {
+                console.error('Erro ao salvar usuário:', error);
+                showNotification('Erro ao salvar usuário: ' + error.message, 'error');
+            } finally {
+                // Restaurar botão
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            }
         });
-        
-        const data = await response.json();
-        
-        if (!response.ok) {
-            throw new Error(data.message || `Erro ao ${isEditing ? 'atualizar' : 'criar'} usuário`);
-        }
-        
-        // Sucesso
-        showNotification(data.message || `Usuário ${isEditing ? 'atualizado' : 'criado'} com sucesso!`, 'success');
-        
-        // Limpar o dataset de edição
-        delete this.dataset.editId;
-        
-        // Resetar formulário
-        this.reset();
-        
-        // Fechar modal
-        closeModal('userModal');
-        
-        // Recarregar lista de usuários
-        loadUsersTable();
-        
-    } catch (error) {
-        console.error('Erro ao salvar usuário:', error);
-        showNotification('Erro ao salvar usuário: ' + error.message, 'error');
-    } finally {
-        // Restaurar botão
-        submitButton.disabled = false;
-        submitButton.textContent = originalText;
-    }
-});
 
         // Navigation event listeners
         document.querySelectorAll('.nav-item').forEach(item => {
@@ -2543,6 +2591,74 @@ async function loadRecentBookings() {
             return contactInfo;
         }
 
+        // Função para preview de imagem
+function setupImagePreview() {
+    const posterInput = document.getElementById('eventPoster');
+    const posterPreview = document.getElementById('posterPreview');
+    const posterImage = document.getElementById('posterImage');
+    const removePosterBtn = document.getElementById('removePoster');
+    const posterUrlInput = document.getElementById('eventPosterUrl');
+
+    posterInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            // Validar tipo de arquivo
+            if (!file.type.startsWith('image/')) {
+                alert('Por favor, selecione apenas arquivos de imagem.');
+                posterInput.value = '';
+                return;
+            }
+
+            // Validar tamanho (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('O arquivo deve ter no máximo 5MB.');
+                posterInput.value = '';
+                return;
+            }
+
+            // Mostrar preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                posterImage.src = e.target.result;
+                posterPreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    removePosterBtn.addEventListener('click', function() {
+        posterInput.value = '';
+        posterUrlInput.value = '';
+        posterPreview.style.display = 'none';
+        posterImage.src = '';
+    });
+}
+
+// Função para upload de imagem
+async function uploadEventPoster(file) {
+    const formData = new FormData();
+    formData.append('poster', file);
+
+    try {
+        const response = await fetch('/api/upload/event-poster', {
+            method: 'POST',
+            credentials: 'include',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Erro no upload');
+        }
+
+        return data.url;
+    } catch (error) {
+        console.error('Erro no upload:', error);
+        throw error;
+    }
+}
+
         // Função para mostrar notificações
         function showNotification(message, type = 'info') {
             // Criar elemento de notificação
@@ -2576,6 +2692,7 @@ async function loadRecentBookings() {
             loadBookingsTable();
             loadUsersTable();
             loadRecentBookings();
+            setupImagePreview();
         });
     </script>
 </body>

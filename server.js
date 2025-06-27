@@ -14,6 +14,8 @@ const bookingRoutes = require('./routes/bookings');
 const userRoutes = require('./routes/users');
 const path = require('path');
 
+const uploadRoutes = require('./routes/upload');
+
 // Importar middleware - CORRIGIDO
 const { errorHandler, notFound } = require('./middleware/errorHandler');
 const { authenticate } = require('./middleware/auth');
@@ -67,7 +69,7 @@ app.use(
       "https://fonts.googleapis.com",
       "https://cdnjs.cloudflare.com"
     ],
-    imgSrc: ["'self'", "data:"],
+    imgSrc: ["'self'", "data:","https://i.ibb.co","https://wlcngasdkisqfhaigkgb.supabase.co"],
     connectSrc: ["'self'", "https://unpkg.com"],
   }
 })
@@ -138,6 +140,8 @@ app.use('/api/events', authenticate, eventRoutes);
 // app.use('/api/bookings', authenticate, bookingRoutes);
 app.use('/api/bookings',bookingRoutes);
 app.use('/api/users', authenticate, userRoutes);
+
+app.use('/api/upload', uploadRoutes);
 
 // Middleware para rotas não encontradas
 app.use(notFound);
