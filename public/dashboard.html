@@ -659,6 +659,70 @@
             opacity: 0.8;
         }
     </style>
+    <link rel="stylesheet" type="text/css" href="./css/sequelton.css">
+    <style>
+        /* Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-row {
+    display: table-row;
+}
+
+.skeleton-cell {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.skeleton-text {
+    height: 16px;
+    margin: 2px 0;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.medium {
+    width: 80%;
+}
+
+.skeleton-text.long {
+    width: 100%;
+}
+
+.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+}
+
+.skeleton-badge {
+    width: 80px;
+    height: 24px;
+    border-radius: 20px;
+}
+
+.skeleton-button {
+    width: 60px;
+    height: 32px;
+    border-radius: 6px;
+    margin-right: 8px;
+}
+    </style>
 </head>
 
 <body>
@@ -1345,8 +1409,19 @@
 
             try {
                 // Mostrar loading
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center;"><div class="loading"></div> Carregando eventos...</td></tr>';
+                // Definir colunas do skeleton para eventos
+                const eventColumns = [
+                    { type: 'avatar-text' }, // Título com imagem
+                    { type: 'text-short' },  // Tipo
+                    { type: 'text-medium' }, // Local
+                    { type: 'text-medium' }, // Data
+                    { type: 'text-short' },  // Preço
+                    { type: 'text-short' },  // Ingressos
+                    { type: 'badge' },       // Status
+                    { type: 'buttons' }      // Ações
+                ];
 
+                tbody.innerHTML = generateTableSkeleton(eventColumns);
                 // Fazer chamada para API
                 let url = '/api/events';
                 if (filter !== 'all') {
@@ -1403,8 +1478,17 @@
 
             try {
                 // Mostrar loading
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando venues...</td></tr>';
+                const venueColumns = [
+                    { type: 'text-medium' }, // Nome
+                    { type: 'text-short' },  // Tipo
+                    { type: 'text-medium' }, // Localização
+                    { type: 'text-short' },  // Capacidade
+                    { type: 'text-short' },  // Eventos
+                    { type: 'badge' },       // Status
+                    { type: 'buttons' }      // Ações
+                ];
 
+                tbody.innerHTML = generateTableSkeleton(venueColumns);
                 // Construir URL com filtros
                 let url = '/api/venues';
                 const params = new URLSearchParams();
@@ -1497,8 +1581,19 @@
 
             try {
                 // Mostrar loading
-                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center;"><div class="loading"></div> Carregando reservas...</td></tr>';
+                const bookingColumns = [
+                    { type: 'text-medium' }, // Número
+                    { type: 'text-medium' }, // Evento
+                    { type: 'text-medium' }, // Cliente
+                    { type: 'text-short' },  // Quantidade
+                    { type: 'text-short' },  // Total
+                    { type: 'badge' },       // Status
+                    { type: 'badge' },       // Pagamento
+                    { type: 'text-short' },  // Data
+                    { type: 'buttons' }      // Ações
+                ];
 
+                tbody.innerHTML = generateTableSkeleton(bookingColumns);
                 // Construir URL com filtros
                 let url = '/api/bookings';
                 const params = new URLSearchParams();
@@ -1577,8 +1672,17 @@
 
             try {
                 // Mostrar loading
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center;"><div class="loading"></div> Carregando usuários...</td></tr>';
+                const userColumns = [
+                    { type: 'text-medium' }, // Nome
+                    { type: 'text-medium' }, // Email
+                    { type: 'text-short' },  // Telefone
+                    { type: 'text-short' },  // Função
+                    { type: 'text-short' },  // Último Login
+                    { type: 'badge' },       // Status
+                    { type: 'buttons' }      // Ações
+                ];
 
+                tbody.innerHTML = generateTableSkeleton(userColumns);
                 // Construir URL com filtros
                 let url = '/api/users';
                 const params = new URLSearchParams();
@@ -1760,14 +1864,14 @@
                 document.querySelector('#eventForm button[type="submit"]').textContent = 'Atualizar Evento';
 
                 if (event.poster_url) {
-        document.getElementById('eventPosterUrl').value = event.poster_url;
-        document.getElementById('posterImage').src = event.poster_url;
-        document.getElementById('posterPreview').style.display = 'block';
-    } else {
-        document.getElementById('posterPreview').style.display = 'none';
-        document.getElementById('posterImage').src = '';
-        document.getElementById('eventPosterUrl').value = '';
-    }
+                    document.getElementById('eventPosterUrl').value = event.poster_url;
+                    document.getElementById('posterImage').src = event.poster_url;
+                    document.getElementById('posterPreview').style.display = 'block';
+                } else {
+                    document.getElementById('posterPreview').style.display = 'none';
+                    document.getElementById('posterImage').src = '';
+                    document.getElementById('eventPosterUrl').value = '';
+                }
 
                 // Abrir modal
                 openEventModal();
@@ -2267,89 +2371,89 @@
         }
 
         // Form handlers
-       document.getElementById('eventForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.textContent;
-    
-    try {
-        // Mostrar loading
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
-        
-        // Verificar se há imagem para upload
-        const posterFile = document.getElementById('eventPoster').files[0];
-        let posterUrl = document.getElementById('eventPosterUrl').value; // URL existente em caso de edição
-        
-        // Se há novo arquivo de imagem, fazer upload
-        if (posterFile) {
-            try {
-                submitBtn.innerHTML = '<div class="loading"></div> Fazendo upload da imagem...';
-                posterUrl = await uploadEventPoster(posterFile);
-            } catch (uploadError) {
-                throw new Error('Erro no upload da imagem: ' + uploadError.message);
-            }
-        }
-        
-        const formData = {
-            title: document.getElementById('eventTitle').value,
-            description: document.getElementById('eventDescription').value,
-            type: document.getElementById('eventType').value,
-            venue_id: document.getElementById('eventVenue').value,
-            start_date_time: document.getElementById('eventStartDate').value,
-            end_date_time: document.getElementById('eventEndDate').value,
-            price: parseFloat(document.getElementById('eventPrice').value),
-            available_tickets: parseInt(document.getElementById('eventTickets').value),
-            status: document.getElementById('eventStatus').value,
-            poster_url: posterUrl // Incluir URL da imagem
-        };
+        document.getElementById('eventForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-        console.log('Dados do evento:', formData);
-        
-        // Verificar se é edição ou criação
-        const editId = this.dataset.editId;
-        const isEditing = !!editId;
-        
-        const url = isEditing ? `/api/events/${editId}` : '/api/events';
-        const method = isEditing ? 'PUT' : 'POST';
-        
-        submitBtn.innerHTML = '<div class="loading"></div> Salvando evento...';
-        
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify(formData)
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+
+            try {
+                // Mostrar loading
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
+
+                // Verificar se há imagem para upload
+                const posterFile = document.getElementById('eventPoster').files[0];
+                let posterUrl = document.getElementById('eventPosterUrl').value; // URL existente em caso de edição
+
+                // Se há novo arquivo de imagem, fazer upload
+                if (posterFile) {
+                    try {
+                        submitBtn.innerHTML = '<div class="loading"></div> Fazendo upload da imagem...';
+                        posterUrl = await uploadEventPoster(posterFile);
+                    } catch (uploadError) {
+                        throw new Error('Erro no upload da imagem: ' + uploadError.message);
+                    }
+                }
+
+                const formData = {
+                    title: document.getElementById('eventTitle').value,
+                    description: document.getElementById('eventDescription').value,
+                    type: document.getElementById('eventType').value,
+                    venue_id: document.getElementById('eventVenue').value,
+                    start_date_time: document.getElementById('eventStartDate').value,
+                    end_date_time: document.getElementById('eventEndDate').value,
+                    price: parseFloat(document.getElementById('eventPrice').value),
+                    available_tickets: parseInt(document.getElementById('eventTickets').value),
+                    status: document.getElementById('eventStatus').value,
+                    poster_url: posterUrl // Incluir URL da imagem
+                };
+
+                console.log('Dados do evento:', formData);
+
+                // Verificar se é edição ou criação
+                const editId = this.dataset.editId;
+                const isEditing = !!editId;
+
+                const url = isEditing ? `/api/events/${editId}` : '/api/events';
+                const method = isEditing ? 'PUT' : 'POST';
+
+                submitBtn.innerHTML = '<div class="loading"></div> Salvando evento...';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showNotification(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!', 'success')
+                    closeModal('eventModal');
+                    this.reset();
+                    // Limpar preview da imagem
+                    document.getElementById('posterPreview').style.display = 'none';
+                    document.getElementById('posterImage').src = '';
+                    document.getElementById('eventPosterUrl').value = '';
+                    delete this.dataset.editId;
+                    loadEventsTable();
+                } else {
+                    throw new Error(data.error || data.message || 'Erro ao salvar evento');
+                }
+
+            } catch (error) {
+                console.error('Erro ao salvar evento:', error);
+                showNotification('Erro ao salvar evento: ' + error.message, 'error')
+            } finally {
+                // Restaurar botão
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
         });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            showNotification(isEditing ? 'Evento atualizado com sucesso!' : 'Evento criado com sucesso!', 'success')
-            closeModal('eventModal');
-            this.reset();
-            // Limpar preview da imagem
-            document.getElementById('posterPreview').style.display = 'none';
-            document.getElementById('posterImage').src = '';
-            document.getElementById('eventPosterUrl').value = '';
-            delete this.dataset.editId;
-            loadEventsTable();
-        } else {
-            throw new Error(data.error || data.message || 'Erro ao salvar evento');
-        }
-        
-    } catch (error) {
-        console.error('Erro ao salvar evento:', error);
-        showNotification('Erro ao salvar evento: ' + error.message, 'error')
-    } finally {
-        // Restaurar botão
-        submitBtn.disabled = false;
-        submitBtn.textContent = originalText;
-    }
-});
 
         document.getElementById('venueForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -2591,72 +2695,114 @@
         }
 
         // Função para preview de imagem
-function setupImagePreview() {
-    const posterInput = document.getElementById('eventPoster');
-    const posterPreview = document.getElementById('posterPreview');
-    const posterImage = document.getElementById('posterImage');
-    const removePosterBtn = document.getElementById('removePoster');
-    const posterUrlInput = document.getElementById('eventPosterUrl');
+        function setupImagePreview() {
+            const posterInput = document.getElementById('eventPoster');
+            const posterPreview = document.getElementById('posterPreview');
+            const posterImage = document.getElementById('posterImage');
+            const removePosterBtn = document.getElementById('removePoster');
+            const posterUrlInput = document.getElementById('eventPosterUrl');
 
-    posterInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            // Validar tipo de arquivo
-            if (!file.type.startsWith('image/')) {
-                alert('Por favor, selecione apenas arquivos de imagem.');
+            posterInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Validar tipo de arquivo
+                    if (!file.type.startsWith('image/')) {
+                        alert('Por favor, selecione apenas arquivos de imagem.');
+                        posterInput.value = '';
+                        return;
+                    }
+
+                    // Validar tamanho (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('O arquivo deve ter no máximo 5MB.');
+                        posterInput.value = '';
+                        return;
+                    }
+
+                    // Mostrar preview
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        posterImage.src = e.target.result;
+                        posterPreview.style.display = 'block';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            removePosterBtn.addEventListener('click', function () {
                 posterInput.value = '';
-                return;
-            }
-
-            // Validar tamanho (5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('O arquivo deve ter no máximo 5MB.');
-                posterInput.value = '';
-                return;
-            }
-
-            // Mostrar preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                posterImage.src = e.target.result;
-                posterPreview.style.display = 'block';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    removePosterBtn.addEventListener('click', function() {
-        posterInput.value = '';
-        posterUrlInput.value = '';
-        posterPreview.style.display = 'none';
-        posterImage.src = '';
-    });
-}
-
-// Função para upload de imagem
-async function uploadEventPoster(file) {
-    const formData = new FormData();
-    formData.append('poster', file);
-
-    try {
-        const response = await fetch('/api/upload/event-poster', {
-            method: 'POST',
-            credentials: 'include',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.message || 'Erro no upload');
+                posterUrlInput.value = '';
+                posterPreview.style.display = 'none';
+                posterImage.src = '';
+            });
         }
 
-        return data.url;
-    } catch (error) {
-        console.error('Erro no upload:', error);
-        throw error;
-    }
-}
+        // Função para upload de imagem
+        async function uploadEventPoster(file) {
+            const formData = new FormData();
+            formData.append('poster', file);
+
+            try {
+                const response = await fetch('/api/upload/event-poster', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erro no upload');
+                }
+
+                return data.url;
+            } catch (error) {
+                console.error('Erro no upload:', error);
+                throw error;
+            }
+        }
+
+        // Função para gerar skeleton loading de tabelas
+        function generateTableSkeleton(columns, rows = 5) {
+            const skeletonRows = [];
+
+            for (let i = 0; i < rows; i++) {
+                const cells = columns.map(col => {
+                    switch (col.type) {
+                        case 'avatar-text':
+                            return `
+                        <td class="skeleton-cell">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <div class="skeleton skeleton-avatar"></div>
+                                <div class="skeleton skeleton-text medium"></div>
+                            </div>
+                        </td>
+                    `;
+                        case 'badge':
+                            return `<td class="skeleton-cell"><div class="skeleton skeleton-badge"></div></td>`;
+                        case 'buttons':
+                            return `
+                        <td class="skeleton-cell">
+                            <div style="display: flex; gap: 8px;">
+                                <div class="skeleton skeleton-button"></div>
+                                <div class="skeleton skeleton-button"></div>
+                            </div>
+                        </td>
+                    `;
+                        case 'text-short':
+                            return `<td class="skeleton-cell"><div class="skeleton skeleton-text short"></div></td>`;
+                        case 'text-medium':
+                            return `<td class="skeleton-cell"><div class="skeleton skeleton-text medium"></div></td>`;
+                        default:
+                            return `<td class="skeleton-cell"><div class="skeleton skeleton-text long"></div></td>`;
+                    }
+                }).join('');
+
+                skeletonRows.push(`<tr class="skeleton-row">${cells}</tr>`);
+            }
+
+            return skeletonRows.join('');
+        }
 
         // Função para mostrar notificações
         function showNotification(message, type = 'info') {

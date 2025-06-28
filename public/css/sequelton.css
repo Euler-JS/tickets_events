@@ -1,0 +1,61 @@
+/* Skeleton Loading */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-row {
+    display: table-row;
+}
+
+.skeleton-cell {
+    padding: 16px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.skeleton-text {
+    height: 16px;
+    margin: 2px 0;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.medium {
+    width: 80%;
+}
+
+.skeleton-text.long {
+    width: 100%;
+}
+
+.skeleton-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
+}
+
+.skeleton-badge {
+    width: 80px;
+    height: 24px;
+    border-radius: 20px;
+}
+
+.skeleton-button {
+    width: 60px;
+    height: 32px;
+    border-radius: 6px;
+    margin-right: 8px;
+}
