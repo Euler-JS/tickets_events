@@ -456,4 +456,267 @@ router.put('/:id/cancel', asyncHandler(async (req, res) => {
   });
 }));
 
+// -----------ROTAS MOBILE----------
+/**
+ * GET /api/bookings/user/:userId
+ * Rota específica para mobile - Listar reservas por user_id
+ */
+router.get('/user/:userId', asyncHandler(async (req, res) => {
+  const { userId } = req.params;
+  const {
+    page = 1,
+    limit = 10,
+    status,
+    event_id,
+    start_date,
+    end_date,
+    sort_by = 'booked_at',
+    sort_order = 'desc'
+  } = req.query;
+
+  const offset = (page - 1) * limit;
+
+  // Validar se userId foi fornecido
+  if (!userId) {
+    throw new AppError('ID do usuário é obrigatório', 400, 'USER_ID_REQUIRED');
+  }
+
+  // Construir query base
+  let query = supabase
+    .from('bookings')
+    .select(`
+      *,
+      events (
+        id,
+        title,
+        type,
+        start_date_time,
+        end_date_time,
+        price,
+        currency,
+        venues (
+          id,
+          name,
+          city,
+          state
+        )
+      )
+    `, { count: 'exact' })
+    .eq('user_id', userId)
+    .is('deleted_at', null);
+
+  // Aplicar filtros
+  if (status) {
+    query = query.eq('status', status);
+  }
+  
+  if (event_id) {
+    query = query.eq('event_id', event_id);
+  }
+  
+  if (start_date) {
+    query = query.gte('booked_at', start_date);
+  }
+  
+  if (end_date) {
+    query = query.lte('booked_at', end_date);
+  }
+  
+  // Ordenação
+  query = query.order(sort_by, { ascending: sort_order === 'asc' });
+  
+  // Paginação
+  query = query.range(offset, offset + limit - 1);
+
+  const { data: bookings, error, count } = await query;
+
+  if (error) {
+    throw new AppError('Erro ao buscar reservas: ' + error.message, 500, 'FETCH_ERROR');
+  }
+
+  res.json({
+    success: true,
+    bookings,
+    pagination: {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: count,
+      totalPages: Math.ceil(count / limit)
+    }
+  });
+}));
+
+/**
+ * GET /api/bookings/:id/user/:userId
+ * Buscar reserva específica por ID e user_id
+ */
+router.get('/:id/user/:userId', asyncHandler(async (req, res) => {
+  const { id, userId } = req.params;
+
+  const { data: booking, error } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      events (
+        id,
+        title,
+        type,
+        start_date_time,
+        end_date_time,
+        price,
+        currency,
+        venues (
+          id,
+          name,
+          address,
+          city,
+          state,
+          country
+        )
+      ),
+      users (
+        id,
+        first_name,
+        last_name,
+        email
+      )
+    `)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .is('deleted_at', null)
+    .single();
+
+  if (error || !booking) {
+    throw new AppError('Reserva não encontrada', 404, 'BOOKING_NOT_FOUND');
+  }
+
+  res.json({ 
+    success: true, 
+    booking 
+  });
+}));
+
+/**
+ * PUT /api/bookings/:id/confirm/user/:userId
+ * Confirmar reserva específica por user_id
+ */
+router.put('/:id/confirm/user/:userId', asyncHandler(async (req, res) => {
+  const { id, userId } = req.params;
+  const { payment_method = 'credit_card', payment_reference } = req.body;
+
+  // Buscar reserva
+  const { data: booking, error: fetchError } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('id', id)
+    .eq('user_id', userId)
+    .eq('status', 'pending')
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !booking) {
+    throw new AppError('Reserva não encontrada ou não está pendente', 404, 'BOOKING_NOT_FOUND');
+  }
+
+  // Atualizar reserva
+  const { data: updatedBooking, error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'confirmed',
+      payment_status: 'paid',
+      payment_method,
+      payment_reference,
+      confirmed_at: new Date().toISOString()
+    })
+    .eq('id', id)
+    .select(`
+      *,
+      events (
+        id,
+        title,
+        start_date_time,
+        venues (name, address, city)
+      )
+    `)
+    .single();
+
+  if (error) {
+    throw new AppError('Erro ao confirmar reserva: ' + error.message, 500, 'CONFIRM_ERROR');
+  }
+
+  res.json({
+    success: true,
+    message: 'Reserva confirmada com sucesso',
+    booking: updatedBooking
+  });
+}));
+
+/**
+ * PUT /api/bookings/:id/cancel/user/:userId
+ * Cancelar reserva específica por user_id
+ */
+router.put('/:id/cancel/user/:userId', asyncHandler(async (req, res) => {
+  const { id, userId } = req.params;
+  const { reason } = req.body;
+
+  // Buscar reserva
+  const { data: booking, error: fetchError } = await supabase
+    .from('bookings')
+    .select(`
+      *,
+      events (id, start_date_time, available_tickets)
+    `)
+    .eq('id', id)
+    .eq('user_id', userId)
+    .in('status', ['pending', 'confirmed'])
+    .is('deleted_at', null)
+    .single();
+
+  if (fetchError || !booking) {
+    throw new AppError('Reserva não encontrada ou não pode ser cancelada', 404, 'BOOKING_NOT_FOUND');
+  }
+
+  // Verificar se evento já começou
+  const now = new Date();
+  const eventStart = new Date(booking.events.start_date_time);
+  
+  if (eventStart <= now) {
+    throw new AppError('Não é possível cancelar reservas de eventos que já começaram', 400, 'EVENT_STARTED');
+  }
+
+  // Cancelar reserva
+  const { data: cancelledBooking, error } = await supabase
+    .from('bookings')
+    .update({
+      status: 'cancelled',
+      cancelled_at: new Date().toISOString(),
+      admin_notes: reason ? `Cancelado: ${reason}` : 'Cancelado pelo usuário'
+    })
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new AppError('Erro ao cancelar reserva: ' + error.message, 500, 'CANCEL_ERROR');
+  }
+
+  // Restaurar ingressos disponíveis
+  const { error: updateError } = await supabase
+    .from('events')
+    .update({ 
+      available_tickets: booking.events.available_tickets + booking.quantity 
+    })
+    .eq('id', booking.event_id);
+
+  if (updateError) {
+    console.error('Erro ao restaurar ingressos:', updateError);
+  }
+
+  res.json({
+    success: true,
+    message: 'Reserva cancelada com sucesso',
+    booking: cancelledBooking
+  });
+}));
+
 module.exports = router;
