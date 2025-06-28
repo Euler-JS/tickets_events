@@ -662,65 +662,583 @@
     <link rel="stylesheet" type="text/css" href="./css/sequelton.css">
     <style>
         /* Skeleton Loading */
-.skeleton {
-    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-    background-size: 200% 100%;
-    animation: skeleton-loading 1.5s infinite;
-    border-radius: 4px;
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes skeleton-loading {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
+
+        .skeleton-row {
+            display: table-row;
+        }
+
+        .skeleton-cell {
+            padding: 16px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .skeleton-text {
+            height: 16px;
+            margin: 2px 0;
+        }
+
+        .skeleton-text.short {
+            width: 60%;
+        }
+
+        .skeleton-text.medium {
+            width: 80%;
+        }
+
+        .skeleton-text.long {
+            width: 100%;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+        }
+
+        .skeleton-badge {
+            width: 80px;
+            height: 24px;
+            border-radius: 20px;
+        }
+
+        .skeleton-button {
+            width: 60px;
+            height: 32px;
+            border-radius: 6px;
+            margin-right: 8px;
+        }
+    </style>
+
+    <style>
+        /* Loading States Melhorados */
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .btn-loading::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-loading .btn-text {
+            opacity: 0.3;
+        }
+
+        /* Loading overlay para seções */
+        .section-loading {
+            position: relative;
+            pointer-events: none;
+        }
+
+        .section-loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(2px);
+            z-index: 10;
+        }
+
+        /* Shimmer para stats cards */
+        .stats-card-loading .stat-value,
+        .stats-card-loading .stat-label {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+            color: transparent;
+        }
+
+        /* Loading para upload de imagem */
+        .upload-loading {
+            position: relative;
+        }
+
+        .upload-loading::after {
+            content: 'Fazendo upload...';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* Progress bar para uploads */
+        .upload-progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: #667eea;
+            border-radius: 0 0 8px 8px;
+            transition: width 0.3s ease;
+        }
+
+        /* Loading para charts */
+        .chart-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            background: #f8fafc;
+            border-radius: 12px;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .chart-loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+    </style>
+    <style>
+        /* Cards View */
+.view-toggle {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
 }
 
-@keyframes skeleton-loading {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
-
-.skeleton-row {
-    display: table-row;
-}
-
-.skeleton-cell {
-    padding: 16px;
-    border-bottom: 1px solid #f1f5f9;
-}
-
-.skeleton-text {
-    height: 16px;
-    margin: 2px 0;
-}
-
-.skeleton-text.short {
-    width: 60%;
-}
-
-.skeleton-text.medium {
-    width: 80%;
-}
-
-.skeleton-text.long {
-    width: 100%;
-}
-
-.skeleton-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 4px;
-}
-
-.skeleton-badge {
-    width: 80px;
-    height: 24px;
-    border-radius: 20px;
-}
-
-.skeleton-button {
-    width: 60px;
-    height: 32px;
+.view-toggle-btn {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    background: white;
     border-radius: 6px;
-    margin-right: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.view-toggle-btn:hover {
+    background: #f8fafc;
+}
+
+.view-toggle-btn.active {
+    background: #667eea;
+    color: white;
+    border-color: #667eea;
+}
+
+.cards-container {
+    display: none;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.cards-container.active {
+    display: grid;
+}
+
+.data-table-container {
+    overflow-x: auto;
+}
+
+.data-table-container.hidden {
+    display: none;
+}
+
+/* Event Card */
+.event-card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.event-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.event-card-header {
+    position: relative;
+    height: 160px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.event-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.event-card-placeholder {
+    font-size: 48px;
+    color: white;
+    opacity: 0.7;
+}
+
+.event-card-body {
+    padding: 16px;
+}
+
+.event-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+    line-height: 1.4;
+}
+
+.event-card-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.event-card-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #666;
+}
+
+.event-card-meta-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+}
+
+.event-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.event-card-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: #667eea;
+}
+
+.event-card-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Venue Card */
+.venue-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.venue-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.venue-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.venue-card-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.venue-card-type {
+    font-size: 12px;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.venue-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.venue-card-info-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #666;
+}
+
+.venue-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.venue-card-capacity {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Booking Card */
+.booking-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    border: 1px solid #e2e8f0;
+    border-left: 4px solid #667eea;
+}
+
+.booking-card:hover {
+    transform: translateY(-1px);
+}
+
+.booking-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.booking-card-number {
+    font-size: 12px;
+    color: #666;
+    background: #f8fafc;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+.booking-card-event {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.booking-card-customer {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 12px;
+}
+
+.booking-card-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.booking-card-detail {
+    text-align: center;
+    padding: 8px;
+    background: #f8fafc;
+    border-radius: 6px;
+}
+
+.booking-card-detail-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 2px;
+}
+
+.booking-card-detail-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+}
+
+.booking-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.booking-card-statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* User Card */
+.user-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+    border: 1px solid #e2e8f0;
+}
+
+.user-card:hover {
+    transform: translateY(-1px);
+}
+
+.user-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.user-card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.user-card-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+.user-card-info p {
+    font-size: 14px;
+    color: #666;
+}
+
+.user-card-details {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.user-card-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.user-card-detail-label {
+    color: #666;
+}
+
+.user-card-detail-value {
+    color: #333;
+    font-weight: 500;
+}
+
+.user-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 12px;
+    border-top: 1px solid #f1f5f9;
+}
+
+/* Skeleton para Cards */
+.skeleton-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+}
+
+.skeleton-card-header {
+    height: 160px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+}
+
+.skeleton-card-title {
+    height: 20px;
+    margin-bottom: 8px;
+}
+
+.skeleton-card-meta {
+    height: 16px;
+    margin-bottom: 6px;
+}
+
+.skeleton-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.skeleton-card-footer > div {
+    height: 32px;
+}
+
+/* Responsive Cards */
+@media (max-width: 768px) {
+    .cards-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .view-toggle {
+        margin-left: 0;
+        margin-top: 12px;
+    }
 }
     </style>
 </head>
@@ -945,13 +1463,30 @@
             <div id="events-section" class="content-section">
                 <div class="section-header">
                     <h2 class="section-title">Gestão de Eventos</h2>
-                    <button class="btn btn-primary" onclick="openEventModal()">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Novo Evento
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" onclick="toggleView('events', 'table')">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z"/>
+                                </svg>
+                                Tabela
+                            </button>
+                            <button class="view-toggle-btn" onclick="toggleView('events', 'cards')">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/>
+                                </svg>
+                                Cards
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" onclick="openEventModal()">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Novo Evento
                     </button>
+                    </div>
+                    
                 </div>
 
                 <div class="quick-actions">
@@ -961,23 +1496,30 @@
                     <button class="quick-action" onclick="filterEvents('cancelled')">Cancelados</button>
                 </div>
 
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Título</th>
-                            <th>Tipo</th>
-                            <th>Local</th>
-                            <th>Data/Hora</th>
-                            <th>Preço</th>
-                            <th>Ingressos</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="eventsTable">
-                        <!-- Dados serão carregados via JavaScript -->
-                    </tbody>
-                </table>
+                <div class="data-table-container" id="eventsTableContainer">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th>Tipo</th>
+                                <th>Local</th>
+                                <th>Data/Hora</th>
+                                <th>Preço</th>
+                                <th>Ingressos</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eventsTable">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Cards Container para Eventos -->
+            <div id="eventsCards" class="cards-container">
+                <!-- Cards serão gerados via JavaScript -->
             </div>
 
             <!-- Venues Section -->
@@ -2298,6 +2840,16 @@
 
         // Charts
         function initializeCharts() {
+            setChartLoading('revenueChart', true);
+
+            // Simular delay de carregamento
+            setTimeout(() => {
+                // Código existente do Revenue Chart
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                new Chart(revenueCtx, {
+                    // ... configuração existente
+                });
+            }, 800);
             // Revenue Chart
             const revenueCtx = document.getElementById('revenueChart').getContext('2d');
             new Chart(revenueCtx, {
@@ -2379,9 +2931,8 @@
 
             try {
                 // Mostrar loading
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = '<div class="loading"></div> Salvando...';
 
+                setButtonLoading(submitBtn, true, 'Salvando evento...');
                 // Verificar se há imagem para upload
                 const posterFile = document.getElementById('eventPoster').files[0];
                 let posterUrl = document.getElementById('eventPosterUrl').value; // URL existente em caso de edição
@@ -2389,7 +2940,7 @@
                 // Se há novo arquivo de imagem, fazer upload
                 if (posterFile) {
                     try {
-                        submitBtn.innerHTML = '<div class="loading"></div> Fazendo upload da imagem...';
+                        setButtonLoading(submitBtn, true, 'Fazendo upload da imagem...');
                         posterUrl = await uploadEventPoster(posterFile);
                     } catch (uploadError) {
                         throw new Error('Erro no upload da imagem: ' + uploadError.message);
@@ -2418,7 +2969,7 @@
                 const url = isEditing ? `/api/events/${editId}` : '/api/events';
                 const method = isEditing ? 'PUT' : 'POST';
 
-                submitBtn.innerHTML = '<div class="loading"></div> Salvando evento...';
+                setButtonLoading(submitBtn, true, 'Salvando evento...');
 
                 const response = await fetch(url, {
                     method: method,
@@ -2450,8 +3001,7 @@
                 showNotification('Erro ao salvar evento: ' + error.message, 'error')
             } finally {
                 // Restaurar botão
-                submitBtn.disabled = false;
-                submitBtn.textContent = originalText;
+                setButtonLoading(submitBtn, false);
             }
         });
 
@@ -2461,8 +3011,7 @@
             // Desabilitar botão de submit para evitar duplo clique
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.textContent;
-            submitButton.disabled = true;
-            submitButton.textContent = 'Salvando...';
+            setButtonLoading(submitButton, true, 'Salvando local...');
 
 
             try {
@@ -2538,8 +3087,7 @@
                 alert('Erro ao salvar venue: ' + error.message);
             } finally {
                 // Restaurar botão
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
+                setButtonLoading(submitButton, false);
             }
         });
 
@@ -2549,8 +3097,7 @@
             // Desabilitar botão de submit para evitar duplo clique
             const submitButton = this.querySelector('button[type="submit"]');
             const originalText = submitButton.textContent;
-            submitButton.disabled = true;
-            submitButton.textContent = 'Salvando...';
+            setButtonLoading(submitButton, true, 'Salvando usuário...');
 
             try {
                 // Verificar se é edição ou criação
@@ -2617,8 +3164,7 @@
                 showNotification('Erro ao salvar usuário: ' + error.message, 'error');
             } finally {
                 // Restaurar botão
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
+                setButtonLoading(submitButton, false);
             }
         });
 
@@ -2720,10 +3266,15 @@
                     }
 
                     // Mostrar preview
+                    posterPreview.classList.add('upload-loading');
+
                     const reader = new FileReader();
                     reader.onload = function (e) {
                         posterImage.src = e.target.result;
                         posterPreview.style.display = 'block';
+                        setTimeout(() => {
+                            posterPreview.classList.remove('upload-loading');
+                        }, 500);
                     };
                     reader.readAsDataURL(file);
                 }
@@ -2803,6 +3354,291 @@
 
             return skeletonRows.join('');
         }
+
+        // Utilitários para Loading States
+        function setButtonLoading(button, loading = true, text = '') {
+            if (loading) {
+                button.dataset.originalText = button.innerHTML;
+                button.classList.add('btn-loading');
+                button.disabled = true;
+                if (text) {
+                    button.innerHTML = `<span class="btn-text">${text}</span>`;
+                }
+            } else {
+                button.classList.remove('btn-loading');
+                button.disabled = false;
+                button.innerHTML = button.dataset.originalText || button.innerHTML;
+                delete button.dataset.originalText;
+            }
+        }
+
+        function setSectionLoading(sectionId, loading = true) {
+            const section = document.getElementById(sectionId);
+            if (loading) {
+                section.classList.add('section-loading');
+            } else {
+                section.classList.remove('section-loading');
+            }
+        }
+
+        function setStatsCardsLoading(loading = true) {
+            const cards = document.querySelectorAll('.stat-card');
+            cards.forEach(card => {
+                if (loading) {
+                    card.classList.add('stats-card-loading');
+                } else {
+                    card.classList.remove('stats-card-loading');
+                }
+            });
+        }
+
+        function setChartLoading(canvasId, loading = true) {
+            const container = document.querySelector(`#${canvasId}`).parentElement;
+            if (loading) {
+                container.innerHTML = `
+            <div class="chart-loading">
+                <div class="chart-loading-spinner"></div>
+                <span style="color: #666; font-size: 14px;">Carregando gráfico...</span>
+            </div>
+        `;
+            }
+            // Note: quando loading = false, o chart será renderizado normalmente
+        }
+
+        // Toggle entre Table e Cards View
+function toggleView(section, viewType) {
+    // Atualizar botões ativos
+    const toggleBtns = document.querySelectorAll(`#${section}-section .view-toggle-btn`);
+    toggleBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Alternar visibilidade
+    const tableContainer = document.getElementById(`${section}TableContainer`);
+    const cardsContainer = document.getElementById(`${section}Cards`);
+    
+    if (viewType === 'table') {
+        tableContainer.classList.remove('hidden');
+        cardsContainer.classList.remove('active');
+    } else {
+        tableContainer.classList.add('hidden');
+        cardsContainer.classList.add('active');
+        
+        // Carregar dados em formato de cards
+        loadCardsData(section);
+    }
+}
+
+// Carregar dados para cards view
+async function loadCardsData(section) {
+    const container = document.getElementById(`${section}Cards`);
+    
+    // Mostrar skeleton de cards
+    container.innerHTML = generateCardsSkeleton(section, 6);
+    
+    try {
+        let data = [];
+        
+        switch (section) {
+            case 'events':
+                const eventsResponse = await fetch('/api/events', { credentials: 'include' });
+                const eventsData = await eventsResponse.json();
+                data = eventsData.events || [];
+                container.innerHTML = data.map(event => generateEventCard(event)).join('');
+                break;
+                
+            case 'venues':
+                const venuesResponse = await fetch('/api/venues', { credentials: 'include' });
+                const venuesData = await venuesResponse.json();
+                data = venuesData.venues || [];
+                container.innerHTML = data.map(venue => generateVenueCard(venue)).join('');
+                break;
+                
+            case 'bookings':
+                const bookingsResponse = await fetch('/api/bookings', { credentials: 'include' });
+                const bookingsData = await bookingsResponse.json();
+                data = bookingsData.bookings || [];
+                container.innerHTML = data.map(booking => generateBookingCard(booking)).join('');
+                break;
+                
+            case 'users':
+                const usersResponse = await fetch('/api/users', { credentials: 'include' });
+                const usersData = await usersResponse.json();
+                data = usersData.users || [];
+                container.innerHTML = data.map(user => generateUserCard(user)).join('');
+                break;
+        }
+        
+        if (data.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum item encontrado</div>';
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar cards:', error);
+        container.innerHTML = '<div class="empty-state">Erro ao carregar dados</div>';
+    }
+}
+
+// Toggle entre Table e Cards View
+function toggleView(section, viewType) {
+    // Atualizar botões ativos
+    const toggleBtns = document.querySelectorAll(`#${section}-section .view-toggle-btn`);
+    toggleBtns.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    // Alternar visibilidade
+    const tableContainer = document.getElementById(`${section}TableContainer`);
+    const cardsContainer = document.getElementById(`${section}Cards`);
+    
+    if (viewType === 'table') {
+        tableContainer.classList.remove('hidden');
+        cardsContainer.classList.remove('active');
+    } else {
+        tableContainer.classList.add('hidden');
+        cardsContainer.classList.add('active');
+        
+        // Carregar dados em formato de cards
+        loadCardsData(section);
+    }
+}
+
+// Gerar skeleton para cards
+function generateCardsSkeleton(section, count = 6) {
+    const skeletons = [];
+    
+    for (let i = 0; i < count; i++) {
+        if (section === 'events') {
+            skeletons.push(`
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-card-header"></div>
+                    <div class="skeleton skeleton-card-title"></div>
+                    <div class="skeleton skeleton-card-meta"></div>
+                    <div class="skeleton skeleton-card-meta"></div>
+                    <div class="skeleton-card-footer">
+                        <div class="skeleton skeleton-text short"></div>
+                        <div class="skeleton skeleton-button"></div>
+                    </div>
+                </div>
+            `);
+        } else {
+            skeletons.push(`
+                <div class="skeleton-card">
+                    <div class="skeleton skeleton-card-title"></div>
+                    <div class="skeleton skeleton-card-meta"></div>
+                    <div class="skeleton skeleton-card-meta"></div>
+                    <div class="skeleton-card-footer">
+                        <div class="skeleton skeleton-text short"></div>
+                        <div class="skeleton skeleton-button"></div>
+                    </div>
+                </div>
+            `);
+        }
+    }
+    
+    return skeletons.join('');
+}
+
+// Gerar Event Card
+function generateEventCard(event) {
+    return `
+        <div class="event-card">
+            <div class="event-card-header">
+                ${event.poster_url ? 
+                    `<img src="${event.poster_url}" alt="${event.title}" class="event-card-image" />` :
+                    `<div class="event-card-placeholder">🎫</div>`
+                }
+            </div>
+            <div class="event-card-body">
+                <h3 class="event-card-title">${event.title}</h3>
+                <div class="event-card-meta">
+                    <div class="event-card-meta-item">
+                        <svg class="event-card-meta-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                        </svg>
+                        <span>${event.venues ? event.venues.name : 'Local não informado'}</span>
+                    </div>
+                    <div class="event-card-meta-item">
+                        <svg class="event-card-meta-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2-7h-3V2h-2v2H8V2H6v2H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H3V9h14v11z"/>
+                        </svg>
+                        <span>${formatDateTime(event.start_date_time)}</span>
+                    </div>
+                    <div class="event-card-meta-item">
+                        <svg class="event-card-meta-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                        <span>${getEventTypeLabel(event.type)}</span>
+                    </div>
+                    <div class="event-card-meta-item">
+                        <svg class="event-card-meta-icon" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/>
+                        </svg>
+                        <span>${event.available_tickets} ingressos disponíveis</span>
+                    </div>
+                </div>
+                <div class="event-card-footer">
+                    <div class="event-card-price">MZN ${parseFloat(event.price).toFixed(2)}</div>
+                    <div style="display: flex; gap: 4px;">
+                        <span class="status-badge status-${event.status}">${getStatusLabel(event.status)}</span>
+                    </div>
+                </div>
+                <div class="event-card-actions">
+                    <button class="btn btn-sm btn-secondary" onclick="editEvent('${event.id}')">Editar</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteEvent('${event.id}')">Excluir</button>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+// Carregar dados para cards view
+async function loadCardsData(section) {
+    const container = document.getElementById(`${section}Cards`);
+    
+    // Mostrar skeleton de cards
+    container.innerHTML = generateCardsSkeleton(section, 6);
+    
+    try {
+        let data = [];
+        
+        switch (section) {
+            case 'events':
+                const eventsResponse = await fetch('/api/events', { credentials: 'include' });
+                const eventsData = await eventsResponse.json();
+                data = eventsData.events || [];
+                container.innerHTML = data.map(event => generateEventCard(event)).join('');
+                break;
+                
+            case 'venues':
+                const venuesResponse = await fetch('/api/venues', { credentials: 'include' });
+                const venuesData = await venuesResponse.json();
+                data = venuesData.venues || [];
+                container.innerHTML = data.map(venue => generateVenueCard(venue)).join('');
+                break;
+                
+            case 'bookings':
+                const bookingsResponse = await fetch('/api/bookings', { credentials: 'include' });
+                const bookingsData = await bookingsResponse.json();
+                data = bookingsData.bookings || [];
+                container.innerHTML = data.map(booking => generateBookingCard(booking)).join('');
+                break;
+                
+            case 'users':
+                const usersResponse = await fetch('/api/users', { credentials: 'include' });
+                const usersData = await usersResponse.json();
+                data = usersData.users || [];
+                container.innerHTML = data.map(user => generateUserCard(user)).join('');
+                break;
+        }
+        
+        if (data.length === 0) {
+            container.innerHTML = '<div class="empty-state">Nenhum item encontrado</div>';
+        }
+        
+    } catch (error) {
+        console.error('Erro ao carregar cards:', error);
+        container.innerHTML = '<div class="empty-state">Erro ao carregar dados</div>';
+    }
+}
 
         // Função para mostrar notificações
         function showNotification(message, type = 'info') {
