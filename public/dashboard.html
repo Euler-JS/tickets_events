@@ -1240,6 +1240,45 @@
                 margin-top: 12px;
             }
         }
+
+        @media (max-width: 480px) {
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .section-header>div {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .view-toggle {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .event-card-actions,
+            .action-buttons {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .booking-card-details {
+                grid-template-columns: 1fr;
+            }
+
+            .user-card-header {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+
+            .user-card-footer {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -1636,29 +1675,29 @@
                 <div class="section-header">
                     <h2 class="section-title">Gestão de Usuários</h2>
                     <div style="display: flex; align-items: center; gap: 16px;">
-        <div class="view-toggle">
-            <button class="view-toggle-btn active" onclick="toggleView('users', 'table')">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z"/>
-                </svg>
-                Tabela
-            </button>
-            <button class="view-toggle-btn" onclick="toggleView('users', 'cards')">
-                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z"/>
-                </svg>
-                Cards
-            </button>
-        </div>
-         <button class="btn btn-primary" onclick="openUserModal()">
-                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Novo Usuário
-                    </button>
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" onclick="toggleView('users', 'table')">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h18v2H3zm0 4h18v2H3zm0 4h18v2H3zm0 4h18v2H3z" />
+                                </svg>
+                                Tabela
+                            </button>
+                            <button class="view-toggle-btn" onclick="toggleView('users', 'cards')">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M3 3h8v8H3zm10 0h8v8h-8zM3 13h8v8H3zm10 0h8v8h-8z" />
+                                </svg>
+                                Cards
+                            </button>
+                        </div>
+                        <button class="btn btn-primary" onclick="openUserModal()">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Novo Usuário
+                        </button>
                     </div>
-                   
+
                 </div>
 
                 <!-- Adicionar depois do section-header na seção de usuários -->
@@ -1672,27 +1711,27 @@
                 </div>
 
                 <div class="data-table-container" id="usersTableContainer">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Email</th>
-                            <th>Telefone</th>
-                            <th>Função</th>
-                            <th>Último Login</th>
-                            <th>Status</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTable">
-                        <!-- Dados serão carregados via JavaScript -->
-                    </tbody>
-                </table>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Email</th>
+                                <th>Telefone</th>
+                                <th>Função</th>
+                                <th>Último Login</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTable">
+                            <!-- Dados serão carregados via JavaScript -->
+                        </tbody>
+                    </table>
                 </div>
                 <!-- Cards Container para Users -->
-<div id="usersCards" class="cards-container">
-    <!-- Cards serão gerados via JavaScript -->
-</div>
+                <div id="usersCards" class="cards-container">
+                    <!-- Cards serão gerados via JavaScript -->
+                </div>
             </div>
 
             <!-- Reports Section -->
@@ -3476,7 +3515,8 @@
         // Toggle entre Table e Cards View
         function toggleView(section, viewType) {
             // Atualizar botões ativos
-            const toggleBtns = document.querySelectorAll(`#${section}-section .view-toggle-btn`);
+            const sectionElement = document.getElementById(`${section}-section`);
+            const toggleBtns = sectionElement.querySelectorAll('.view-toggle-btn');
             toggleBtns.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
 
