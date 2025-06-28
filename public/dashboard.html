@@ -1371,7 +1371,6 @@
 
                 tbody.innerHTML = events.map(event => `
             <tr>
-                <td>${event.title}</td>
                 <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         ${event.poster_url ? `<img src="${event.poster_url}" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />` : '<div style="width: 40px; height: 40px; background: #f0f0f0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px;">📷</div>'}
